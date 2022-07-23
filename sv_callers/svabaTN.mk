@@ -6,7 +6,8 @@ SVABA_CORES ?= 8
 SVABA_MEM_CORE ?= 6G
 SVABA_REF ?= $(REF_FASTA)
 SVABA_DBSNP ?= /data/riazlab/lib/reference/svaba/dbsnp_indel.vcf
-SVABA_BLACKLIST ?= /data/riazlab/lib/reference/wgs_blacklist_meres.bed
+SVABA_BLACKLISTED ?= /data/riazlab/lib/reference/wgs_blacklist_meres.bed
+# svaba_blacklisted is the genome region remove telomere, centromeres (blacklist) regions.
 SVABA ?= /data/riazlab/lib/bin/svaba
 
 svabaTN : $(foreach pair,$(SAMPLE_PAIRS),svaba/$(pair).svaba.somatic.indel.vcf)
@@ -23,7 +24,7 @@ svaba/$1_$2.svaba.somatic.indel.vcf : bam/$1.bam bam/$2.bam
 										 -D $$(SVABA_DBSNP) \
 										 -L 100000 \
 										 -x 25000 \
-										 -k $$(SVABA_BLACKLIST) \
+										 -k $$(SVABA_BLACKLISTED) \
 										 -a $1_$2 \
 										 -G $$(SVABA_REF)")
 endef
