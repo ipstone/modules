@@ -1,0 +1,8 @@
+This folder contains the Makefile to generate :
+      _samples.yaml
+      _sample.fastq.yaml
+
+From the rawdata/*.fastq.gz files.
+
+The way to run this is to:
+      make -f modules/scripts/prepare_samples/fastq_to_samples/Makefile
