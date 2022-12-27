@@ -6,10 +6,10 @@
             source {env}/bin/activate {env}
 
     in my current conda environments located at:
-            /lila/data/riazlab/lib/miniconda3/envs/lumpy/bin
+            /data/.../lib/miniconda3/envs/lumpy/bin
                 1. I need to manually copy the activate script into the bin folder,
                 2. and then specify the environment as:
-                    /data/riazlab/lib/miniconda3/envs/lumpy
+                    /data/.../lib/miniconda3/envs/lumpy
         Then the conda environment works fine.
         (it's kind of tweaking the miniconda environment to fit the call
         pattern in jrflab modules)
