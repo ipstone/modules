@@ -8,7 +8,8 @@ LOGDIR ?= log/scalpel.$(NOW)
 
 SCALPEL_TARGET_ONLY ?= true
 
-NUM_SCALPEL_CHUNKS = 30
+NUM_SCALPEL_CHUNKS = 22
+# Change the chunk size to 22 to see if that works
 SCALPEL_CHUNKS = $(shell seq -f "%03g" $(NUM_SCALPEL_CHUNKS))
 
 SCALPEL_MIN_COV ?= 5

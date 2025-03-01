@@ -1,5 +1,6 @@
 include modules/Makefile.inc
-include modules/genome_inc/b37.inc
+#nclude modules/genome_inc/b37.inc
+include modules/genome_inc/GRCm38.inc
 
 LOGDIR ?= log/cnvkit_plot.$(NOW)
 PHONY += cnvkit cnvkit/plot

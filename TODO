@@ -1,0 +1,10 @@
+
+
+Wed Mar 29 16:38:37 EDT 2023
+    In the future, always keep a TODO or README note in the folder to indicate
+    what is modified to the modules, for what purposes.
+
+    Here the modules_ipstone is modified to run mouse WGS samples:
+        - there are also some tweaks for indel call comparision (changes to
+          allow only 1 indel call to be kept in the final somatic indel
+          result)

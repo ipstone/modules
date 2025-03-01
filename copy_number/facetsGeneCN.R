@@ -22,7 +22,7 @@ optList <- list(
 				make_option("--mysqlPassword", default = NULL, help = "MySQL server password"),
 				make_option("--mysqlDb", default = 'homo_sapiens_core_75_37', help = "MySQL server database"),
 				make_option("--genesFile", default = NULL, help = "list of genes to include (hgnc symbols)"),
-				make_option("--annotFile", default = "~/share/reference/annotation_gene_lists/geneCN.txt", help = "file with annotations to replace MySQL sever query"))
+				make_option("--annotFile", default = "/data/riazlab/reference/mm10_genes/output_mm10_known_gene.bed", help = "file with annotations to replace MySQL sever query"))
 parser <- OptionParser(usage = "%prog [options] [facets files]", option_list = optList)
 
 arguments <- parse_args(parser, positional_arguments = T)

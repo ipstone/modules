@@ -16,6 +16,8 @@ DBSNP := $(REF_DIR)/mgp.v5.merged.snps_all.dbSNP142.vcf.gz
 MGP_SNP_DBSNP := $(DBSNP)
 MGP_INDEL_DBSNP := $(REF_DIR)/mgp.v5.merged.indels.dbSNP142.normed.vcf.gz
 
+CENTROMERE_TABLE = $(REF_DIR)/centromere_mm10.txt
+
 EXOME_BED = $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38.bed
 EXOME_BED_NOHEADER = $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38_noheader.bed
 
@@ -25,6 +27,10 @@ CHR_LEN = $(REF_DIR)/Mus_musculus_GRCm38/mm10.len
 BOWTIE_REF = $(REF_DIR)/Mus_musculus_GRCm38/Mus_musculus.GRCm38.71.dna.chromosome.genome
 
 ENSEMBL_TXDB = $(REF_DIR)/mus_musculus_ensembl_biomart.2014-04-28.sqlite
+
+HOTSPOT_VCF_DIR = modules/reference/hotspots
+HOTSPOT_VCF.ext = $(HOTSPOT_VCF_DIR)/hotspot-v3.vcf.gz
+HOTSPOT_VCF.int = $(HOTSPOT_VCF_DIR)/hotspot-v1.vcf.gz
 
 #TXDB = $(HOME)/ensmusg70.08032013.sqlite
 

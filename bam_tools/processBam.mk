@@ -118,7 +118,7 @@ endif
 
 # mark duplicates
 %.markdup.bam : %.bam
-	$(call RUN,-s 36G -m 48G -w 7200,"$(MKDIR) metrics; $(call MARK_DUP_MEM,10G) I=$< O=$@ METRICS_FILE=metrics/$(call strip-suffix,$(@F)).dup_metrics.txt && $(RM) $<")
+	$(call RUN,-s 72G -m 96G -w 7200,"$(MKDIR) metrics; $(call MARK_DUP_MEM,20G) I=$< O=$@ METRICS_FILE=metrics/$(call strip-suffix,$(@F)).dup_metrics.txt && $(RM) $<")
 
 %.rmdup.bam : %.bam
 	$(call RUN,-s 4G -m 7G,"$(SAMTOOLS) rmdup $< $@ && $(RM) $<")

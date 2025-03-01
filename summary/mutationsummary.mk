@@ -5,7 +5,6 @@ LOGDIR = log/summary.$(NOW)
 .SECONDARY:
 .DELETE_ON_ERROR:
 
-#NO_HOTSPOTS ?= false
 NO_HOTSPOTS ?= true
 
 ifeq ($(NO_HOTSPOTS),false)

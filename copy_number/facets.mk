@@ -31,7 +31,8 @@ FACETS_OPTS = --genome $(REF) \
 SNP_PILEUP = snp-pileup
 SNP_PILEUP_OPTS = -A --min-map-quality=15 --min-base-quality=15 --gzip --max-depth=15000
 
-FACETS_DBSNP = $(if $(TARGETS_FILE),facets/vcf/targets_dbsnp.vcf,$(DBSNP))
+#FACETS_DBSNP = $(if $(TARGETS_FILE),facets/vcf/targets_dbsnp.vcf,$(DBSNP))
+FACETS_DBSNP = $(DBSNP)
 
 # convert old facets basecount files to snp-pileup
 CONVERT_BASECOUNT ?= false
@@ -72,7 +73,8 @@ facets/vcf/dbsnp_het_gatk.snps.vcf : $(FACETS_DBSNP) $(foreach sample,$(SAMPLES)
 
 # no flag target definitions
 facets/vcf/targets_dbsnp.vcf : $(TARGETS_FILE)
-	$(INIT) $(BEDTOOLS) intersect -header -u -a $(HOME)/share/reference/dbsnp_138.b37.gmaf_subset.vcf -b $< > $@
+	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@
+	#$(INIT) $(BEDTOOLS) intersect -header -u -a $(HOME)/share/reference/dbsnp_138.b37.gmaf_subset.vcf -b $< > $@
 
 ifeq ($(CONVERT_BASECOUNT),true)
 CONVERT_BC_TO_SNP_PILEUP = python modules/copy_number/convert_basecount_to_snp_pileup.py

@@ -13,6 +13,7 @@ if __name__ == "__main__":
     parser.add_argument('vcf_file', nargs='+', help='indel vcf files to marge')
     parser.add_argument('--ignore_filter', action='store_true', default=False, help='ignore filter column')
     parser.add_argument('--min_keep', type=int, default=2, help='minimum presence to keep variant')
+    # parser.add_argument('--min_keep', type=int, default=1, help='minimum presence to keep variant')
     args = parser.parse_args()
 
     vcf_readers = [vcf.Reader(open(f, 'r')) for f in args.vcf_file]
