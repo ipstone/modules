@@ -157,8 +157,8 @@ endif
 , := ,
 space :=
 space +=
-$(space) := 
-$(space) +=
+space := $(space)
+space +=
 
 # $(call strip-suffix,filename)
 strip-suffix = $(firstword $(subst ., ,$(1)))
