@@ -9,6 +9,7 @@ ifneq ("$(wildcard config.inc)", "")
 	include config.inc
 endif
 
+# default reference: 
 REF ?= b37
 include modules/genome_inc/$(REF).inc
 
@@ -16,7 +17,7 @@ ifndef MAKEFILE_INC
 
 SAMPLE_SET_FILE ?= sample_sets.txt
 SAMPLE_FILE ?= samples.txt
-SAMPLE_SPLIT_FILE ?= samples.split.txt
+SAMPLE_SPLIT_FILE ?= samples.split.txt # generate using scripts/prepareFastq.sh [remove underscores from sample names]
 
 PROJECT_NAME = $(shell pwd | sed 's:.*/projects/::; s:.*/data/::; s:.*kinglab/::; s:/:_:g')
 
@@ -82,8 +83,8 @@ SHELL = /bin/bash
 
 export TMPDIR := $(HOME)/share/data/$(USER)/tmp
 
-PICARD_MEM = 10G
-PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=4000000
+PICARD_MEM = 20G
+PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=8000000
 PICARD_DIR ?= $(HOME)/share/usr/lib/java
 
 ANALYZE_COV = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/AnalyzeCovariates.jar $(PICARD_OPTS)
@@ -135,6 +136,7 @@ JAVA := java $(JAVA_ARGS)
 JAVA6 := $(JAVA6_BIN) $(JAVA_ARGS)
 JAVA7 := $(JAVA7_BIN) $(JAVA_ARGS)
 JAVA8 := $(JAVA8_BIN) $(JAVA_ARGS)
+#JAVA = /usr/bin/java $(JAVA_ARGS)
 
 NO_RM ?= false
 ifeq ($(NO_RM),true)
@@ -146,10 +148,11 @@ else
 endif
 
 , := ,
+# define $(,) and $( ) for escaping commas and spaces
 space :=
 space +=
-$(space) := 
-$(space) +=
+space := $(space)
+space +=
 
 strip-suffix = $(firstword $(subst ., ,$(1)))
 

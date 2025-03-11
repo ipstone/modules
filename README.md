@@ -15,3 +15,6 @@
     [wiki](https://github.com/jrflab/modules/wiki).
 
 # Known issues
+
+# Requirements
+- GNU Make 4.3 or newer is required for proper handling of spaces in variable definitions.
