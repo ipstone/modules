@@ -9,7 +9,6 @@ ifneq ("$(wildcard config.inc)", "")
 	include config.inc
 endif
 
-# default reference: 
 REF ?= b37
 include modules/genome_inc/$(REF).inc
 
@@ -17,7 +16,7 @@ ifndef MAKEFILE_INC
 
 SAMPLE_SET_FILE ?= sample_sets.txt
 SAMPLE_FILE ?= samples.txt
-SAMPLE_SPLIT_FILE ?= samples.split.txt # generate using scripts/prepareFastq.sh [remove underscores from sample names]
+SAMPLE_SPLIT_FILE ?= samples.split.txt
 
 PROJECT_NAME = $(shell pwd | sed 's:.*/projects/::; s:.*/data/::; s:.*kinglab/::; s:/:_:g')
 
@@ -35,37 +34,30 @@ ifneq ($(wildcard $(SAMPLE_SET_FILE)),)
   SETS_SEQ := $(shell seq 1 $(NUM_SETS))
   $(foreach i,$(SETS_SEQ), \
 	  $(eval set.$i := $(call get_space_sets,$i)))
-  # define set_lookup.$(sample)
   $(foreach i,$(SETS_SEQ), \
 	  $(foreach sample,$(set.$i), \
 		  $(eval set_lookup.$(sample) := $i)))
-  # define SAMPLE_SETS to contain sample_sample_normal
   $(foreach i,$(SETS_SEQ), \
 	  $(eval SAMPLE_SETS += $(call get_underscore_sets,$i)))
-  # tumor.SET => tumors
   $(foreach i,$(SETS_SEQ), \
 	$(eval tumor.$(call get_underscore_sets,$i) := $(call get_tumors,$(set.$i))))
-  # normal.SET => normal
   $(foreach i,$(SETS_SEQ), \
 	$(eval normal.$(call get_underscore_sets,$i) := $(call get_normal,$(set.$i))))
   NORMAL_SAMPLES = $(foreach i,$(SETS_SEQ),$(call get_normal,$(set.$i)))
   TUMOR_SAMPLES = $(foreach i,$(SETS_SEQ),$(call get_tumors,$(set.$i)))
   SAMPLE_PAIRS = $(foreach set,$(SAMPLE_SETS),$(foreach tumor,$(tumor.$(set)),$(tumor)_$(normal.$(set))))
-  # define tumor.pair and normal.pair to retrieve tumor/normal from pairs
   $(foreach set,$(SAMPLE_SETS), \
 	  $(foreach tumor,$(tumor.$(set)), \
 		  $(eval tumor.$(tumor)_$(normal.$(set)) := $(tumor))))
   $(foreach set,$(SAMPLE_SETS), \
 	  $(foreach tumor,$(tumor.$(set)), \
 		  $(eval normal.$(tumor)_$(normal.$(set)) := $(normal.$(set)))))
-  # tumor_normal.$(tumor) to retrieve tumor_normal
   $(foreach set,$(SAMPLE_SETS), \
 	  $(foreach tumor,$(tumor.$(set)), \
 		  $(eval tumor_normal.$(tumor) := $(tumor)_$(normal.$(set)))))
   $(foreach set,$(SAMPLE_SETS), \
 	  $(foreach tumor,$(tumor.$(set)), \
 		  $(eval tumor_normal.$(normal.$(set)) := $(tumor)_$(normal.$(set)))))
-  # set.$(sample) to retrieve sample sets (underscores)
   $(foreach i,$(SETS_SEQ), \
 	  $(foreach sample,$(set.$i), \
 		  $(eval set.$(sample) := $(word $i,$(SAMPLE_SETS)))))
@@ -84,14 +76,12 @@ ifneq ($(wildcard $(SAMPLE_SPLIT_FILE)),)
   SPLIT_SAMPLES = $(shell cut -f1 $(SAMPLE_SPLIT_FILE) | sort | uniq)
 endif
 
-
 ALL_SAMPLES = $(SAMPLE_PAIRS) $(SAMPLES)
 
 SHELL = /bin/bash
 
 export TMPDIR := $(HOME)/share/data/$(USER)/tmp
 
-# PICARD tools
 PICARD_MEM = 10G
 PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=4000000
 PICARD_DIR ?= $(HOME)/share/usr/lib/java
@@ -109,7 +99,13 @@ CREATE_SEQ_DICT = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/CreateSequenceDic
 CALC_HS_METRICS = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/CalculateHsMetrics.jar $(PICARD_OPTS)
 COLLECT_MULT_METRICS = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/CollectMultipleMetrics.jar $(PICARD_OPTS)
 COLLECT_TARGETED_METRICS = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/CollectTargetedPcrMetrics.jar $(PICARD_OPTS)
-
+COLLECT_ALIGNMENT_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectAlignmentSummaryMetrics $(PICARD_OPTS)
+COLLECT_INSERT_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectInsertSizeMetrics $(PICARD_OPTS)
+COLLECT_OXOG_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectOxoGMetrics $(PICAD_OPTS)
+COLLECT_GC_BIAS = $(PICARD) -Xmx$(PICARD_MEM) CollectGcBiasMetrics $(PICARD_OPTS)
+COLLECT_WGS_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectWgsMetrics $(PICARD_OPTS)
+COLLECT_DUP_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectDuplicateMetrics $(PICARD_OPTS)
+BAM_INDEX = $(PICARD) -Xmx$(PICARD_MEM) BamIndexStats $(PICARD_OPTS)
 FIX_MATE = $(call FIX_MATE_MEM,$(PICARD_MEM))
 FIX_MATE_MEM = $(JAVA) -Xmx$(1) -jar $(PICARD_DIR)/FixMateInformation.jar $(PICARD_OPTS) TMP_DIR=$(TMPDIR)
 SAM_TO_FASTQ = $(call SAM_TO_FASTQ_MEM,$(PICARD_MEM))
@@ -125,24 +121,20 @@ PICARD = $(JAVA8) -Xmx$2 -jar $(PICARD2_JAR) $1 $(PICARD_OPTS)
 
 VARSCAN = $(JAVA8) -Xmx10G -jar $(VARSCAN_JAR)
 
-# SNP EFF
 SNP_EFF = $(call SNP_EFF_MEM,$(DEFAULT_JAVA_MEM))
 SNP_EFF_MEM = $(JAVA8) -Xmx$1 -jar $(SNP_EFF_JAR)
 SNP_SIFT_MEM = $(JAVA8) -Xmx$1 -jar $(SNP_SIFT_JAR)
 SNP_SIFT = $(call SNP_SIFT_MEM,$(DEFAULT_JAVA_MEM))
 VCF_EFF_ONE_PER_LINE = $(HOME)/share/usr/snpEff-4.1/scripts/vcfEffOnePerLine.pl
-VCF_JOIN_EFF = modules/scripts/joinEff.pl
+VCF_JOIN_EFF = modules/scripts/join_eff.pl
 
 COUNT_SAMPLES = $(shell expr `sed 's/\..*//; s:.*/::' <<< $1 | grep -o "_" | wc -l` + 1)
 
-
 JAVA_ARGS = -Djava.io.tmpdir=$(TMPDIR)
-#JAVA_TMP := $(HOME)/tmp
 JAVA := java $(JAVA_ARGS)
 JAVA6 := $(JAVA6_BIN) $(JAVA_ARGS)
 JAVA7 := $(JAVA7_BIN) $(JAVA_ARGS)
 JAVA8 := $(JAVA8_BIN) $(JAVA_ARGS)
-#JAVA = /usr/bin/java $(JAVA_ARGS)
 
 NO_RM ?= false
 ifeq ($(NO_RM),true)
@@ -153,20 +145,17 @@ else
     RMR := rm -r
 endif
 
-# define $(,) and $( ) for escaping commas and spaces
 , := ,
 space :=
 space +=
 $(space) := 
 $(space) +=
 
-# $(call strip-suffix,filename)
 strip-suffix = $(firstword $(subst ., ,$(1)))
 
 LINK = ln -svf $(notdir $1) $(2) && touch $1
 
 NOW := $(shell date +"%F")
-
 
 MKDIR = mkdir -p -m 775
 MKDIRS = $(MKDIR) $(LOGDIR)/$(@D) $(@D)
@@ -178,25 +167,22 @@ export PATH := $(JRFLAB_MODULES_ENV)/bin:$(PATH)
 ECHO_ACTIVATE_ENV = unset PYTHONPATH; OLDPATH=\$$PATH; tries=0; until [[ \$$tries -gt 10 ]] || source $1/bin/activate $1; do export PATH=\$$OLDPATH; tries=\`expr \$$tries + 1\`; jitter=\`expr \$$RANDOM % 10 + 1\`; sleep \`expr \$$jitter \\* \$$tries\`; done
 ACTIVATE_ENV = unset PYTHONPATH; OLDPATH=$$PATH; tries=0; until [[ $$tries -gt 10 ]] || source $1/bin/activate $1; do export PATH=$$OLDPATH; tries=`expr $$tries + 1`; jitter=`expr $$RANDOM % 10 + 1`; sleep `expr $$jitter \* $$tries`; done
 
-# SGE variables
-#QUEUE ?= jrf.q all.q
+### SGE
 QUEUE ?=
-
 WALLTIMES = MEM SHORT LONG
-### PBS
-PBS_NODES = gpu-2-14 cpu-6-1 gpu-1-4
-
-#### SGE
 SGE_PARALLEL_ENV = smp
 SGE_NODES = e02 e06
 SGE_QSUB_SCRIPT = python modules/scripts/qsub.py
 export SGE_ROOT = /common/sge
 
+### PBS
+PBS_NODES = gpu-2-14 cpu-6-1 gpu-1-4
+
 MAKE_PID := $(shell echo $$PPID)
 JOB_FLAG := $(filter -j%, $(subst -j ,-j,$(shell ps T | grep "^\s*$(MAKE_PID).*$(MAKE)")))
 JOBS := $(subst -j,,$(JOB_FLAG))
 
-# run locally
+### LOCAL
 RUN_FIRST = umask $(UMASK); $(if $(and $(findstring true,$(USE_CLUSTER)),$(JOBS)),sleep $$[ ( $$RANDOM % 20 ) + 1 ]s;) $(MKDIRS)
 INIT = $(RUN_FIRST); $(call ACTIVATE_ENV,$(JRFLAB_MODULES_ENV)); umask $(UMASK); set -o pipefail;
 INIT_ENV = $(RUN_FIRST); $(call ACTIVATE_ENV,$1); umask $(UMASK); set -o pipefail;
@@ -208,12 +194,9 @@ RUN_OPTS = $(if $(findstring false,$(USE_CLUSTER)),-l) -o $@ $(if $(CLUSTER_ENGI
 		   --default_env $(JRFLAB_MODULES_ENV) -S $(SHELL) \
 		   --log_file $(LOG) $(if $($(CLUSTER_ENGINE)_NODES),--servers $($(CLUSTER_ENGINE)_NODES)) \
 		   $(if $(PROJECT_NAME),-p $(PROJECT_NAME))
-#usage $(call RUN,args,script)
 RUN = echo $2 | python modules/scripts/run.py $(RUN_OPTS) $1
 
-#MD5 = md5sum $(1:.md5=) > $1
 MD5 = md5sum $(@:.md5=) > $@
-#CHECK_MD5 = md5sum -c $(filter %.md5,$^); i=0; until md5sum --status -c $(filter %.md5,$^); do if (( $$i % 5  == 0 )); then date; md5sum -c $(filter %.md5,$^); fi; if (( $$i > 20 )); then echo giving up; exit 1; fi; sleep 5; let i=i+1 ; done;
 CHECK_MD5 = for i in {0..20}; do if md5sum -c $(filter %.md5,$^); then break; fi; sleep 5; done;
 <M = $(<:.md5=)
 ^M = $(^:.md5=)
@@ -221,8 +204,8 @@ CHECK_MD5 = for i in {0..20}; do if md5sum -c $(filter %.md5,$^); then break; fi
 <<M = $(word 2,$(^M))
 <<<M = $(word 3,$(^M))
 
-# $(call CHECK_VCF,vcf.file,target,command)
-# check for valid header, ie non-empty vcf file
+# check for valid header i.e. non-empty vcf file
+# usage: $(call CHECK_VCF,vcf.file,target,command)
 CHECK_VCF = mkdir -p $(@D); if [ `grep -v '^\#' $< | wc -l` -eq 0 ] && [ `grep '^\#CHROM' $< | wc -l` -eq 1 ]; then cp $< $@; else $1; fi
 CHECK_MAF = mkdir -p $(@D); if [ `grep -v '^\#' $< | wc -l` -eq 1 ] && [ `grep '^Hugo_Symbol' $< | wc -l` -eq 1 ]; then cp $< $@; else $1; fi
 CHECK_UVCF = mkdir -p $(@D); if [ `grep -v '^\#' $< | wc -l` -eq 0 ] && [ `grep '^\#CHROM' $< | wc -l` -eq 1 ]; then sed 's/FILTER\tINFO/FILTER\tUPS-COORDINATE\tINFO/' $< > $@; else $1; fi

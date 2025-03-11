@@ -13,9 +13,6 @@ ANNOVAR_REF = hg19
 CLINVAR = $(REF_DIR)/clinvar_20160531.vcf.gz
 EXAC_NONTCGA = $(REF_DIR)/ExAC.r0.3.nonTCGA.sites.vep.2.vcf.gz
 
-#UCSC_REFSEQ_GTF = $(REF_DIR)s/genomes/ucsc.refseq.gtf
-#REFSEQ_GTF := $(UCSC_REFSEQ_GTF)
-
 FREEC_REF = $(REF_DIR)/GATK_bundle/2.3/FREEC_ref
 CHR_LEN = $(REF_DIR)/GATK_bundle/2.3/b37.len
 
@@ -40,14 +37,14 @@ MAPSPLICE_REF_BASENAME = $(REF_DIR)/GATK_bundle/2.3/mapsplice_ref/hg19
 
 GISTIC_REF ?= $(HOME)/share/usr/gistic_2_0_21/refgenefiles/hg19.mat
 
-# align to combined reference if PDX, filter mouse chromosomes afterwards
 PDX ?= false
 ifeq ($(PDX),true)
 BWAMEM_REF_FASTA ?= $(REF_DIR)/pdx/combined_Mus_musculus_GRCm38_human_g1k_v37.fasta
 endif
 
-REF_FASTA ?= $(REF_DIR)/b37_dmp/b37.fasta
-NOCHR_REF_FASTA ?= $(REF_DIR)/b37_dmp/b37.fasta
+DMP_FASTA ?= $(REF_DIR)/b37_dmp/b37.fasta
+REF_FASTA ?= $(REF_DIR)/GATK_bundle/2.3/human_g1k_v37.fasta
+NOCHR_REF_FASTA ?= $(REF_DIR)/GATK_bundle/2.3/human_g1k_v37.fasta
 CHR_REF_FASTA ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
 REF_2BIT ?= $(REF_DIR)/GATK_bundle/2.3/human_g1k_v37.2bit
 DBSNP ?= $(REF_DIR)/dbsnp_138.b37.gmaf.vcf.gz
@@ -127,7 +124,6 @@ VEP_REF = GRCh37
 VEP_DATA = $(REF_DIR)/vep/v86
 VEP_OVERRIDES = $(REF_DIR)/isoform_overrides_at_mskcc
 VEP_SPECIES = homo_sapiens
-
 
 FUENTES_BED = $(REF_DIR)/fuentes_blacklist.b37.bed
 DGD_BED = $(REF_DIR)/dgd.b37.bed
