@@ -19,11 +19,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     df_bp = pd.read_table(args.breakpoints_file)
-    df_sum = pd.read_table(args.sum_file))
-    df_exon = pd.read_table(args.exons_file))
+    df_sum = pd.read_table(args.sum_file)
+    df_exon = pd.read_table(args.exons_file)
     df_bp_sum = pd.concat([df_bp, df_sum], axis=1)
     df_bp_sum = df_bp_sum.drop(['5_Prime', '3_Prime'])
-    df_exon = df_exon.drop(['5p', '3P'])
+    df_exon = df_exon.drop(['5P', '3P'])
     df = pd.merge(df_bp_sum, df_exon, how='left', left_on='Fusion_Candidate', right_on='#Id')
 
     df = df.rename(columns={'#5P': 'GeneSymbol1', '3P': 'GeneSymbol2',
@@ -33,17 +33,16 @@ if __name__ == '__main__':
                             'spanningreads': 'NumSpanningReads',
                             'homology': 'Homology',
                             'fusiontype': 'FusionType'})
-    info_fields = ['Homology', 'FusionType', 'JunctionSequence', 'GeneExpr1', 'GeneExpr2', 'GeneExpr_Fused',
-                   'ES', 'GJS', 'US', 'EricScore']
+    info_fields = ['Homology', 'FusionType', 'JunctionSequence', 'GeneExpr1', 'GeneExpr2', 'GeneExpr_Fused', 'ES', 'GJS', 'US', 'EricScore']
     df['Info'] = ''
     for i, row in df.iterrows():
         fields = []
         for field in info_fields:
             if row[field] != '' and pd.notnull(row[field]):
                 x = "{}=".format(field)
-                if ' ' in str(row[field]):
+               if ' ' in str(row[field]):
                     x += '"{}"'.format(row[field])
-                else:
+               else:
                     x += '{}'.format(row[field])
                 fields.append(x)
         df.ix[i, 'Info'] = ";".join(fields)

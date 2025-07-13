@@ -1,5 +1,3 @@
-# This module is for the star aligner
-# input: $(SAMPLES) 
 include modules/Makefile.inc
 
 BAM_NO_REALN = true
@@ -34,8 +32,8 @@ star_chimeric_junctions : $(foreach sample,$(SAMPLES),star/$(sample).Chimeric.ou
 
 define align-split-fastq
 star/$2.star_align_timestamp : $3
-	$$(call RUN,-n 4 -s 6G -m 10G,"$$(STAR) $$(STAR_OPTS) \
-		--outFileNamePrefix star/$2. --runThreadN 4 \
+	$$(call RUN,-n 16 -s 6G -m 8G -w 2440,"$$(STAR) $$(STAR_OPTS) \
+		--outFileNamePrefix star/$2. --runThreadN 16 \
 		--outSAMattrRGline \"ID:$2\" \"LB:$1\" \"SM:$1\" \"PL:$${SEQ_PLATFORM}\" \
 		--readFilesIn $$^ --readFilesCommand zcat && touch $$@")
 star/$2.Aligned.sortedByCoord.out.bam : star/$2.star_align_timestamp
@@ -46,8 +44,8 @@ $(foreach ss,$(SPLIT_SAMPLES),\
 	$(eval $(call align-split-fastq,$(split.$(ss)),$(ss),$(fq.$(ss))))))
 
 star/%.Aligned.sortedByCoord.out.bam star/%.Chimeric.out.junction : fastq/%.1.fastq.gz fastq/%.2.fastq.gz
-	$(call RUN,-n 4 -s 6G -m 10G,"$(STAR) $(STAR_OPTS) \
-		--outFileNamePrefix star/$*. --runThreadN 4 \
+	$(call RUN,-n 16 -s 6G -m 8G -w 2440,"$(STAR) $(STAR_OPTS) \
+		--outFileNamePrefix star/$*. --runThreadN 16 \
 		--outSAMattrRGline \"ID:$*\" \"LB:$*\" \"SM:$*\" \"PL:${SEQ_PLATFORM}\" \
 		--readFilesIn $^ --readFilesCommand zcat")
 

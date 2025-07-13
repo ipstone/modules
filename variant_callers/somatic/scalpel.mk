@@ -50,7 +50,7 @@ $(foreach i,$(SCALPEL_CHUNKS),$(eval $(call scalpel-interval-chunk,$i)))
 
 define scalpel-chunk-tumor-normal
 scalpel/$2_$3/$1/main/somatic.indel.vcf : scalpel/interval_chunk/chunk$1.bed bam/$2.bam bam/$3.bam
-	$$(call RUN,-N $2_$3_$1_scalpel -c -n 8 -s 8G -m 10G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 8 --tumor $$(<<) --normal $$(<<<) $$(SCALPEL_OPTS) --bed $$(<) --dir $$(@D)/..")
+	$$(call RUN,-N $2_$3_$1_scalpel -c -n 16 -s 8G -m 10G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 16 --tumor $$(<<) --normal $$(<<<) $$(SCALPEL_OPTS) --bed $$(<) --dir $$(@D)/..")
 endef
 $(foreach chunk,$(SCALPEL_CHUNKS), \
 	$(foreach pair,$(SAMPLE_PAIRS),\
@@ -58,7 +58,7 @@ $(foreach chunk,$(SCALPEL_CHUNKS), \
 
 define scalpel-tumor-normal
 vcf/$1_$2.scalpel_indels.vcf : $$(foreach chunk,$$(SCALPEL_CHUNKS),scalpel/$1_$2/$$(chunk)/main/somatic.indel.vcf)
-	$$(call RUN,-c -s 8G -m 12G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-c -s 16G -m 24G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(SCALPEL_SOURCE_ANN_VCF) | $$(TUMOR_VARIANT_READ_FILTER_VCF) -t $1 -n $2 > $$@.tmp && \
 		$$(call VERIFY_VCF,$$@.tmp,$$@) && \
 		$$(RSCRIPT) modules/scripts/swapvcf.R --file $$@ --tumor $1 --normal $2 && \
@@ -70,7 +70,7 @@ else
 
 define scalpel-chr-tumor-normal
 scalpel/$2_$3/$1/main/somatic.indel.vcf : bam/$2.bam bam/$3.bam
-	$$(call RUN,-N $2_$3_$1_scalpel -c -n 8 -s 8G -m 10G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 8 \
+	$$(call RUN,-N $2_$3_$1_scalpel -c -n 16 -s 8G -m 10G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 16 \
 		--tumor $$(<) --normal $$(<<) $$(SCALPEL_OPTS) --bed $1 --dir $$(@D)/..")
 endef
 $(foreach chr,$(CHROMOSOMES), \
@@ -79,7 +79,7 @@ $(foreach chr,$(CHROMOSOMES), \
 
 define scalpel-tumor-normal
 vcf/$1_$2.scalpel_indels.vcf : $$(foreach chr,$$(CHROMOSOMES),scalpel/$1_$2/$$(chr)/main/somatic.indel.vcf)
-	$$(call RUN,-c -s 8G -m 12G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-c -s 16G -m 24G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(SCALPEL_SOURCE_ANN_VCF) | $$(TUMOR_VARIANT_READ_FILTER_VCF) -t $1 -n $2 > $$@.tmp && \
 		$$(call VERIFY_VCF,$$@.tmp,$$@) && \
 		$$(RSCRIPT) modules/scripts/swapvcf.R --file $$@ --tumor $1 --normal $2 && \

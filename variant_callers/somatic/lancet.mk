@@ -15,8 +15,8 @@ LANCET_DIR = $(HOME)/share/usr/lancet
 LANCET = export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LANCET_DIR)/bamtools-2.3.0/lib/; \
 	$(LANCET_DIR)/lancet
 
-LANCET_THREADS = 4
-LANCET_RUN_OPTS = -c -n $(LANCET_THREADS) -s 2G -m 3G -w 36:00:00
+LANCET_THREADS = 8
+LANCET_RUN_OPTS = -c -n $(LANCET_THREADS) -s 4G -m 6G -w 36:00:00
 LANCET_OPTS = --ref $(REF_FASTA) --cov-thr $(LANCET_MIN_COV) --num-threads $(LANCET_THREADS)
 
 LANCET_SOURCE_ANN_VCF = python modules/vcf_tools/annotate_source_vcf.py --source lancet
@@ -86,7 +86,7 @@ endif
 
 define filter_lancet-tumor-normal
 vcf/$1_$2.lancet_%.vcf lancet/vcf/$1_$2.lancet_%.vcf.tmp : lancet/vcf/$1_$2.lancet_%.vcf
-	$$(call RUN,-s 1G -m 2G,"$$(RSCRIPT) modules/scripts/swapvcf.R --file $$< --tumor $1 --normal $2 && \
+	$$(call RUN,-s 8G -m 16G,"$$(RSCRIPT) modules/scripts/swapvcf.R --file $$< --tumor $1 --normal $2 && \
 							 cp $$<.tmp $$< && \
 							 $$(LANCET_SOURCE_ANN_VCF) < $$< | \
 							 $$(TUMOR_VARIANT_READ_FILTER_VCF) -t $1 -n $2 > $$@.tmp && $$(call VERIFY_VCF,$$@.tmp,$$@)")

@@ -3,7 +3,8 @@ include modules/variant_callers/gatk.inc
 
 LOGDIR = log/sum_reads.$(NOW)
 
-DEFAULT_ENV = $(HOME)/share/usr/anaconda-envs/jrflab-modules-0.1.6
+#DEFAULT_ENV = $(HOME)/share/usr/anaconda-envs/jrflab-modules-0.1.6
+DEFAULT_ENV = $(HOME)/share/usr/anaconda-envs/jrflab-modules-0.1.4
 
 SUM_READS_RSCRIPT = ${RSCRIPT} modules/rnaseq/summarizeRNASeqReads.R
 SUM_EXONS_RSCRIPT = ${RSCRIPT} modules/rnaseq/summarizeRNASeqReadsByExon.R
@@ -20,10 +21,10 @@ SUM_TYPE = byGene byExon
 all : $(foreach type,$(SUM_TYPE),$(foreach sample,$(SAMPLES),sumreads/$(sample).sumreads.$(type).txt)) sumreads/rpkm_by_gene.txt sumreads/rpkm_by_exon.txt sumreads/counts_by_gene.txt sumreads/counts_by_exon.txt
 
 sumreads/%.sumreads.byGene.txt : bam/%.bam bam/%.bam.bai
-	$(call RUN,-v $(DEFAULT_ENV) -s 24G -m 48G,"$(SUM_READS_RSCRIPT) --genome $(REF) --outFile $@ $(SUM_READS_OPTS) $<")
+	$(call RUN,-v $(DEFAULT_ENV) -s 96G -m 128G,"$(SUM_READS_RSCRIPT) --genome $(REF) --outFile $@ $(SUM_READS_OPTS) $<")
 
 sumreads/%.sumreads.byExon.txt : bam/%.bam bam/%.bam.bai
-	$(call RUN,-v $(DEFAULT_ENV) -s 24G -m 48G,"$(SUM_EXONS_RSCRIPT) --genome $(REF) --outFile $@ $(SUM_READS_OPTS) $<")
+	$(call RUN,-v $(DEFAULT_ENV) -s 96G -m 128G,"$(SUM_EXONS_RSCRIPT) --genome $(REF) --outFile $@ $(SUM_READS_OPTS) $<")
 
 sumreads/rpkm_by_gene.txt : $(foreach sample,$(SAMPLES),sumreads/$(sample).sumreads.byGene.txt)
 	cut -f 2 $< > $@; \

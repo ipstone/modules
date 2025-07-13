@@ -8,13 +8,13 @@ include modules/config.inc
 
 export
 
-NUM_ATTEMPTS ?= 20
+NUM_ATTEMPTS ?= 10
 NOW := $(shell date +"%F")
 MAKELOG = log/$(@).$(NOW).log
 
 USE_CLUSTER ?= true
 QMAKE = modules/scripts/qmake.pl -n $@.$(NOW) $(if $(SLACK_CHANNEL),-c $(SLACK_CHANNEL)) -r $(NUM_ATTEMPTS) -m -s -- make
-NUM_JOBS ?= 50
+NUM_JOBS ?= 100
 
 define RUN_QMAKE
 $(QMAKE) -e -f $1 -j $2 $(TARGET) && \
@@ -29,13 +29,13 @@ RUN_MAKE = $(if $(findstring false,$(USE_CLUSTER))$(findstring n,$(MAKEFLAGS)),+
 #==================================================
 
 TARGETS += somatic_indels
-somatic_indels:
+somatic_indels :
 	$(call RUN_MAKE,modules/variant_callers/somatic/somaticIndels.mk)
 	
 TARGETS += somatic_variants
-somatic_variants:
+somatic_variants :
 	$(call RUN_MAKE,modules/variant_callers/somatic/somaticVariants.mk)
-
+	
 TARGETS += copynumber_summary
 copynumber_summary:
 	$(MAKE) -f modules/copy_number/genomealtered.mk -j $(NUM_JOBS)
@@ -78,6 +78,7 @@ mosdepth_wgs :
 TARGETS += indexcovTN
 indexcovTN :
 	$(call RUN_MAKE,modules/copy_number/indexcovTN.mk) 
+
 #==================================================
 # aligners
 #==================================================
@@ -110,11 +111,11 @@ tophat :
 	$(call RUN_MAKE,modules/aligners/tophatAligner.mk)
 
 TARGETS += star
-star:
+star :
 	$(call RUN_MAKE,modules/aligners/starAligner.mk)
 
 TARGETS += star_fusion_aligner
-star_fusion_aligner:
+star_fusion_aligner :
 	$(call RUN_MAKE,modules/aligners/starFusionAligner.mk)
 	
 TARGETS += blast_reads
@@ -143,11 +144,11 @@ snvmix :
 	$(call RUN_MAKE,modules/variant_callers/snvmix.mk)
 	
 TARGETS += tvcTN
-tvcTN:
+tvcTN :
 	$(call RUN_MAKE,modules/variant_callers/somatic/tvcTN.mk)
 
 TARGETS += tvc
-tvc:
+tvc :
 	$(call RUN_MAKE,modules/variant_callers/tvc.mk)
 
 TARGETS += varscanTN
@@ -191,12 +192,16 @@ samtools_het :
 	$(call RUN_MAKE,modules/variant_callers/samtoolsHet.mk)
 
 TARGETS += platypus
-platypus:
+platypus :
 	$(call RUN_MAKE,modules/variant_callers/somatic/platypus.mk)
 	
 TARGETS += msisensor
 msisensor :
 	$(call RUN_MAKE,modules/variant_callers/somatic/msisensor.mk)	
+
+TARGETS += mimsi
+mimsi :
+	$(call RUN_MAKE,modules/variant_callers/somatic/mimsi.mk)
 
 TARGETS += hla_polysolver
 hla_polysolver :
@@ -211,16 +216,8 @@ museqTN :
 	$(call RUN_MAKE,modules/variant_callers/somatic/museqTN.mk)
 	
 TARGETS += hotspot
-hotspot: 
+hotspot : 
 	$(call RUN_MAKE,modules/variant_callers/hotspot.mk)
-	
-TARGETS += genotype_hotspot
-genotype_hotspot:
-	$(call RUN_MAKE,modules/variant_callers/genotypehotspots.mk)
-	
-TARGETS += genotype_pdx
-genotype_pdx:
-	$(call RUN_MAKE,modules/variant_callers/genotypepdx.mk)
 	
 TARGETS += jsm
 jsm :
@@ -228,11 +225,19 @@ jsm :
 
 TARGETS += sufam
 sufam:
-	$(call RUN_MAKE,modules/variant_callers/sufamSampleSet.mk)
+	$(call RUN_MAKE,modules/variant_callers/sufamsampleset.mk)
+
+TARGETS += sufam_gt
+sufam_gt :
+	$(call RUN_MAKE,modules/variant_callers/sufam_gt.mk)
+
+TARGETS += get_basecount
+get_basecount :
+	$(call RUN_MAKE,modules/variant_callers/get_basecounts.mk)
 	
-TARGETS += sufam_multisample
-sufam_multisample:
-	$(call RUN_MAKE,modules/variant_callers/sufammultisample.mk)
+TARGETS += strelka_varscan_indels
+strelka_varscan_indels :
+	$(call RUN_MAKE,modules/variant_callers/somatic/strelkaVarscanIndels.mk)
 
 
 #==================================================
@@ -242,11 +247,11 @@ sufam_multisample:
 TARGETS += facets
 facets :
 	$(call RUN_MAKE,modules/copy_number/facets.mk)
-	
-TARGETS += facets_plot
-facets_plot :
-	$(call RUN_MAKE,modules/copy_number/facetsplot.mk)
-	
+
+TARGETS += facets_suite
+facets_suite :
+	$(call RUN_MAKE,modules/copy_number/facets_suite.mk)
+
 TARGETS += ascat
 ascat :
 	$(call RUN_MAKE,modules/copy_number/ascat.mk)
@@ -258,10 +263,6 @@ norm_copynum :
 TARGETS += titan
 titan :
 	$(call RUN_MAKE,modules/copy_number/titan.mk)
-
-TARGETS += strelka_varscan_indels
-strelka_varscan_indels:
-	$(call RUN_MAKE,modules/variant_callers/somatic/strelkaVarscanIndels.mk)
 
 TARGETS += varscan_cnv
 varscan_cnv :
@@ -295,57 +296,17 @@ TARGETS += gistic
 gistic :
 	$(call RUN_MAKE,modules/copy_number/gistic.mk)
 	
-TARGETS += genome_altered
-genome_altered :
-	$(call RUN_MAKE,modules/copy_number/genomealtered.mk)
-	
-TARGETS += lst_score
-lst_score :
-	$(call RUN_MAKE,modules/copy_number/lstscore.mk)
-	
-TARGETS += ntai_score
-ntai_score :
-	$(call RUN_MAKE,modules/copy_number/ntaiscore.mk)
-	
-TARGETS += myriad_score
-myriad_score :
-	$(call RUN_MAKE,modules/copy_number/myriadhrdscore.mk)
-	
 TARGETS += snp6
 snp6 :
 	$(call RUN_MAKE,modules/snp6/snp6.mk)
-
-TARGETS += cnvkit_coverage
-cnvkit_coverage :
-	$(call RUN_MAKE,modules/copy_number/cnvkitcoverage.mk)
 	
-TARGETS += cnvkit_reference
-cnvkit_reference :
-	$(call RUN_MAKE,modules/copy_number/cnvkitreference.mk)
-	
-TARGETS += cnvkit_fix
-cnvkit_fix :
-	$(call RUN_MAKE,modules/copy_number/cnvkitfix.mk)
-
-TARGETS += cnvkit_plot
-cnvkit_plot :
-	$(call RUN_MAKE,modules/copy_number/cnvkitplot.mk)
-	
-TARGETS += cnvkit_heatmap
-cnvkit_heatmap :
-	$(call RUN_MAKE,modules/copy_number/cnvkitheatmap.mk)
-	
-TARGETS += cnvkit_pca
-cnvkit_pca :
-	$(call RUN_MAKE,modules/copy_number/cnvkitprcomp.mk)
-	
-TARGETS += cnvkit_qc
-cnvkit_qc :
-	$(call RUN_MAKE,modules/copy_number/cnvkitqc.mk)
+TARGETS += cnv_kit
+cnv_kit :
+	$(call RUN_MAKE,modules/copy_number/cnvkit.mk)
 
 
 #==================================================
-# structural variant callers
+# RNAseq structural variant callers
 #==================================================
 
 TARGETS += svaba
@@ -353,7 +314,7 @@ svabaTN :
 	$(call RUN_MAKE,modules/sv_callers/svabaTN.mk)
 
 TARGETS += star_fusion
-star_fusion:
+star_fusion :
 	$(call RUN_MAKE,modules/sv_callers/starFusion.mk)
 
 TARGETS += tophat_fusion
@@ -363,22 +324,51 @@ tophat_fusion :
 TARGETS += manta_rnaseq
 manta_rnaseq :
 	$(call RUN_MAKE,modules/sv_callers/mantaRnaseq.mk)
+	
+TARGETS += integrate_rnaseq
+integrate_rnaseq :
+	$(call RUN_MAKE,modules/sv_callers/integrateRnaseq.mk)
 
+TARGETS += soapfuse
+soapfuse :
+	$(call RUN_MAKE,modules/sv_callers/soapFuse.mk)
+
+TARGETS += mapsplice
+mapsplice :
+	$(call RUN_MAKE,modules/sv_callers/mapsplice.mk)
+
+TARGETS += fusioncatcher
+fusioncatcher :
+	$(call RUN_MAKE,modules/sv_callers/fusioncatcher.mk)
+	
+TARGETS += oncofuse
+oncofuse :
+	$(call RUN_MAKE,modules/sv_callers/oncofuse.mk)
+
+
+#==================================================
+# DNA structural variant callers
+#==================================================	
+
+TARGETS += manta_tumor_normal
+manta_tumor_normal :
+	$(call RUN_MAKE,modules/sv_callers/manta_tumor_normal.mk)
+	
+TARGETS += svaba_tumor_normal
+svaba_tumor_normal :
+	$(call RUN_MAKE,modules/sv_callers/svaba_tumor_normal.mk)
+	
+TARGETS += gridss_tumor_normal
+gridss_tumor_normal :
+	$(call RUN_MAKE,modules/sv_callers/gridss_tumor_normal.mk)
+	
 TARGETS += manta
 manta :
 	$(call RUN_MAKE,modules/sv_callers/manta.mk)
 
-TARGETS += mantaTN
-mantaTN :
-	$(call RUN_MAKE,modules/sv_callers/mantaTN.mk)
-
 TARGETS += brass
 brass :
 	$(call RUN_MAKE,modules/sv_callers/brass.mk)
-
-TARGETS += integrate_rnaseq
-integrate_rnaseq :
-	$(call RUN_MAKE,modules/sv_callers/integrateRnaseq.mk)
 
 TARGETS += integrate
 integrate :
@@ -393,10 +383,6 @@ TARGETS += chimscan
 chimscan :
 	$(call RUN_MAKE_J,modules/sv_callers/chimerascan.mk,$(NUM_CHIMSCAN_JOBS))
 
-TARGETS += oncofuse
-oncofuse :
-	$(call RUN_MAKE,modules/sv_callers/oncofuse.mk)
-
 TARGETS += lumpy
 lumpy :
 	$(call RUN_MAKE,modules/sv_callers/lumpy.mk)
@@ -409,18 +395,6 @@ TARGETS += nfuse_wgss_wtss
 nfuse_wgss_wtss :
 	$(call RUN_MAKE,modules/sv_callers/nfuseWGSSWTSS.mk)
 
-TARGETS += soapfuse
-soapfuse :
-	$(call RUN_MAKE,modules/sv_callers/soapFuse.mk)
-
-TARGETS += mapsplice
-mapsplice :
-	$(call RUN_MAKE,modules/sv_callers/mapsplice.mk)
-
-TARGETS += fusioncatcher
-fusioncatcher :
-	$(call RUN_MAKE,modules/sv_callers/fusioncatcher.mk)
-
 TARGETS += crest
 crest :
 	$(call RUN_MAKE,modules/sv_callers/crest.mk)
@@ -428,23 +402,65 @@ crest :
 TARGETS += delly
 delly :
 	$(call RUN_MAKE,modules/sv_callers/delly.mk)
-
+	
 
 #==================================================
-# pre-processing
+# BAM tools
+#==================================================
+
+TARGETS += fix_bam
+fix_bam :
+	$(call RUN_MAKE,modules/bam_tools/fix_bam.mk)
+
+TARGETS += fix_rg
+fix_rg :
+	$(call RUN_MAKE,modules/bam_tools/fix_rg.mk)
+
+TARGETS += fix_mate
+fix_mate :
+	$(call RUN_MAKE,modules/bam_tools/fix_mate.mk)
+
+TARGETS += merge_bam
+merge_bam :
+	$(call RUN_MAKE,modules/bam_tools/merge_bam.mk)
+	
+TARGETS += process_bam
+process_bam : 
+	$(call RUN_MAKE,modules/bam_tools/processBam.mk)
+	
+TARGETS += getbam_irb_mirror
+getbam_irb_mirror : 
+	$(call RUN_MAKE,modules/bam_tools/get_bam_irb_mirror.mk)
+	
+TARGETS += getbam_data_mirror
+getbam_data_mirror : 
+	$(call RUN_MAKE,modules/bam_tools/get_bam_data_mirror.mk)
+	
+TARGETS += putbam_data_mirror
+putbam_data_mirror : 
+	$(call RUN_MAKE,modules/bam_tools/put_bam_data_mirror.mk)
+	
+
+#==================================================
+# VCF tools
+#==================================================
+
+TARGETS += merge_sv
+merge_sv : 
+	$(call RUN_MAKE,modules/vcf_tools/merge_sv.mk)
+	
+TARGETS += annotate_sv
+annotate_sv : 
+	$(call RUN_MAKE,modules/vcf_tools/annotate_sv.mk)
+	
+
+#==================================================
+# FASTQ tools
 #==================================================
 
 TARGETS += merge_fastq
 merge_fastq : 
 	$(call RUN_MAKE,modules/fastq_tools/mergeFastq.mk)
-
-TARGETS += fix_bam
-fix_bam :
-	$(call RUN_MAKE,modules/bam_tools/fixBam.mk)
-
-TARGETS += fix_rg
-fix_rg :
-	$(call RUN_MAKE,modules/bam_tools/fixRG.mk)
 
 TARGETS += merge_split_fastq
 merge_split_fastq :
@@ -469,31 +485,23 @@ extract_any_unmapped_pairs :
 TARGETS += bam_to_fasta
 bam_to_fasta :
 	$(call RUN_MAKE,modules/fastq_tools/bamtoFasta.mk)
-	
-TARGETS += process_bam
-process_bam : 
-	$(call RUN_MAKE,modules/bam_tools/processBam.mk)
 
-TARGETS += merge_bam
-merge_bam :
-	$(call RUN_MAKE,modules/bam_tools/mergeBam.mk)
-
-TARGETS += check_bam
-check_bam :
-	$(call RUN_MAKE,modules/bam_tools/checkBam.mk)
-	
 
 #==================================================
-# quality control
+# QC
 #==================================================
 
 TARGETS += bam_metrics
 bam_metrics :
-	$(call RUN_MAKE,modules/qc/bamMetrics.mk)
+	$(call RUN_MAKE,modules/qc/bam_metrics.mk)
 
 TARGETS += bam_interval_metrics
 bam_interval_metrics :
-	$(call RUN_MAKE,modules/qc/bamIntervalMetrics.mk)
+	$(call RUN_MAKE,modules/qc/bam_interval_metrics.mk)
+
+TARGETS += wgs_metrics
+wgs_metrics :
+	$(call RUN_MAKE,modules/qc/wgs_metrics.mk)
 
 TARGETS += rnaseq_metrics
 rnaseq_metrics :
@@ -521,43 +529,29 @@ bam_stats :
 
 
 #==================================================
-# rna sequencing
+# RNA sequencing
 #==================================================
-
-TARGETS += cufflinks
-cufflinks : 
-	$(call RUN_MAKE,modules/rnaseq/cufflinks.mk)
 
 TARGETS += sum_reads
 sum_reads :
-	$(call RUN_MAKE,modules/rnaseq/sumRNASeqReads.mk)
+	$(call RUN_MAKE,modules/rnaseq/sumreads.mk)
 
-TARGETS += exon_counts
-exon_counts :
-	$(call RUN_MAKE,modules/rnaseq/dexseq.mk)
+TARGETS += kallisto
+kallisto :
+	$(call RUN_MAKE,modules/rnaseq/kallisto.mk)
+	
+TARGETS += immune_deconv
+immune_deconv :
+	$(call RUN_MAKE,modules/rnaseq/immunedeconv.mk)
 	
 
 #==================================================
-# chip sequencing
-#==================================================
-	
-TARGETS += macs2TN
-macs2TN:
-	$(call RUN_MAKE,modules/variant_callers/somatic/macs2TN.mk)
-
-
-#==================================================
-# ploidy
+# Ploidy / Clonality
 #==================================================
 
 TARGETS += pyloh
 pyloh :
 	$(call RUN_MAKE,modules/ploidy/pyloh.mk)
-
-
-#==================================================
-# clonality
-#==================================================
 
 TARGETS += clonehd
 clonehd :
@@ -567,26 +561,33 @@ TARGETS += absolute_seq
 absolute_seq :
 	$(call RUN_MAKE,modules/clonality/absoluteSeq.mk)
 	
-TARGETS += setup_pyclone
-setup_pyclone :
-	$(call RUN_MAKE,modules/clonality/setuppyclone.mk)
-
-TARGETS += run_pyclone
-run_pyclone :
-	$(call RUN_MAKE,modules/clonality/runpyclone.mk)
+TARGETS += pyclone_13
+pyclone_13 :
+	$(call RUN_MAKE,modules/clonality/pyclone_13.mk)
 	
-TARGETS += plot_pyclone
-plot_pyclone :
-	$(call RUN_MAKE,modules/clonality/plotpyclone.mk)
+TARGETS += pyclone_vi
+pyclone_vi :
+	$(call RUN_MAKE,modules/clonality/pyclone_vi.mk)
 
-	
 #==================================================
 # mutational signatures
 #==================================================
 
-TARGETS += emu
-emu :
-	$(call RUN_MAKE,modules/mut_sigs/emu.mk)
+TARGETS += deconstruct_sigs
+deconstruct_sigs :
+	$(call RUN_MAKE,modules/signatures/deconstruct_sigs.mk)
+
+TARGETS += sv_signature
+sv_signature :
+	$(call RUN_MAKE,modules/signatures/sv_signature.mk)
+	
+TARGETS += star_fish
+star_fish :
+	$(call RUN_MAKE,modules/signatures/star_fish.mk)
+	
+TARGETS += hr_detect
+hr_detect :
+	$(call RUN_MAKE,modules/signatures/hr_detect.mk)
 
 
 #==================================================
@@ -605,9 +606,17 @@ TARGETS += virus_detection_bowtie2
 virus_detection_bowtie2 :
 	$(call RUN_MAKE,modules/virus/virus_detection_bowtie2.mk)
 	
+TARGETS += viral_detection
+viral_detection :
+	$(call RUN_MAKE,modules/test/workflows/viral_detection.mk)
+	
 TARGETS += krona_classify
 krona_classify :
 	$(call RUN_MAKE,modules/virus/krona_classify.mk)
+	
+TARGETS += medicc2
+medicc2 :
+	$(call RUN_MAKE,modules/copy_number/medicc2.mk)
 
 
 #==================================================
@@ -617,10 +626,6 @@ krona_classify :
 TARGETS += recurrent_mutations
 recurrent_mutations :
 	$(call RUN_MAKE,modules/recurrent_mutations/report.mk)
-
-TARGETS += mutsig_report
-mutsig_report :
-	$(call RUN_MAKE,modules/mut_sigs/mutSigReport.mk)
 	
 TARGETS += genome_summary
 genome_summary :
@@ -628,7 +633,11 @@ genome_summary :
 
 TARGETS += mutation_summary
 mutation_summary :
-	$(call RUN_MAKE,modules/summary/mutationSummary.mk)
+	$(call RUN_MAKE,modules/summary/mutationsummary.mk)
+	
+TARGETS += delmh_summary
+delmh_summary :
+	$(call RUN_MAKE,modules/summary/delmh_summary.mk)
 
 TARGETS += delmh_summary
 delmh_summary :	
@@ -642,29 +651,39 @@ delmh_summary_2callers :
 #==================================================
 
 TARGETS += ann_ext_vcf
-ann_ext_vcf: 
+ann_ext_vcf : 
 	$(call RUN_MAKE,modules/vcf_tools/annotateExtVcf.mk)
 
 TARGETS += ann_somatic_vcf
-ann_somatic_vcf: 
+ann_somatic_vcf : 
 	$(call RUN_MAKE,modules/vcf_tools/annotateSomaticVcf.mk)
 
 TARGETS += ann_vcf
-ann_vcf: 
+ann_vcf : 
 	$(call RUN_MAKE,modules/vcf_tools/annotateVcf.mk)
-
 	
+TARGETS += cravat_annotate
+cravat_annotate :
+	$(call RUN_MAKE,modules/vcf_tools/cravat_annotation.mk)
+	
+TARGETS += cravat_summary
+cravat_summary :
+	$(call RUN_MAKE,modules/summary/cravat_summary.mk)
+	
+TARGETS += ann_summary_vcf
+ann_summary_vcf : 
+	$(call RUN_MAKE,modules/vcf_tools/annotateSummaryVcf.mk)
+
+
 #==================================================
 # beta testing
 #==================================================
 
-TARGETS += sufam_multisample_test
-sufam_multisample_test:
-	$(call RUN_MAKE,modules/test/variant_callers/sufammultisample.mk)
+TARGETS += hotspot_summary
+hotspot_summary :
+	$(MAKE) -f modules/variant_callers/genotypehotspots.mk -j $(NUM_JOBS)
+	$(call RUN_MAKE,modules/summary/hotspotsummary.mk)
 	
-TARGETS += qdnaseq_extract_test
-qdnaseq_extract_test:
-	$(call RUN_MAKE,modules/test/copy_number/qdnaseqextract.mk)
 	
 TARGETS += qdnaseq_copynumber_test
 qdnaseq_copynumber_test:

@@ -6,25 +6,20 @@ use warnings;
 use Cwd;
 
 my $cwd = getcwd;
-#my $fin_email_addrs = "qmake.finished\@raylim.mm.st charlottekyng+qmake.finished\@gmail.com";
-#my $err_email_addrs = "qmake.error\@raylim.mm.st charlottekyng+qmake.error\@gmail.com";
-#my $start_email_addrs = "qmake.start\@raylim.mm.st charlottekyng+qmake.start\@gmail.com";
-
-#my $err_slack = "pipeline_error";
-my $err_slack = "isaac_test";
+my $err_slack = "pipeline_error";
 my $fin_slack = "pipeline_finished";
 
 my %slack_map = (
-    limr => "raylim",
-    burkek => "burkek",
-    schizasm => "schizasm",
-    ngk1 => "charlottekyng",
-    debruiji => "debruiji",
-    defilipm => "maria",
-    bermans => "hxrts",
-    gularter => "rjgularte"
+    brownd7 => "W013UH0HWUF",
+    selenicp => "W0142HA5LNA",
+    dacruzpa => "W01BT68MSSD",
+    parejaf => "W01BLNUF7J8",
+    zhuy1 => "W013UH382P9",
+    peix => "W0147TPN3E1",
+    issabhas => "U01V8R1RKQU",
+    xiaoy => "U01C8MPBSH5",
+    giacomf1 => "U06SW7W6D44"
 );
-
 
 sub HELP_MESSAGE {
     print "Usage: qmake.pl -n [name] -m -r [numAttempts]\n";
@@ -39,8 +34,13 @@ sub HELP_MESSAGE {
 
 sub slack {
     my ($slack_channel, $slack_message) = @_;
-    my $slack_url = "\$'https://jrflab.slack.com/services/hooks/slackbot?token=2TWPiY9Hu4EUteoECqCEfYAZ&channel=%23$slack_channel'";
-    system "curl --data ' $slack_message' $slack_url &> /dev/null";
+    my $slack_url = "";
+    if ($slack_channel eq "pipeline_error") {
+    	$slack_url = $ENV{SLACK_URL_ERR};
+    } elsif ($slack_channel eq "pipeline_finished") {
+    	$slack_url = $ENV{SLACK_URL_FIN};
+    }
+    system "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"$slack_message\"}' $slack_url &> /dev/null";
 }
 
 
@@ -75,10 +75,8 @@ my $args = join " ", @ARGV;
 # makefile processing
 =pod
 my $orig_args = $args;
-
 $args =~ s;-f (\S+);"-f " . dirname($1) . "/." . basename($1) . ".tmp";e;
 my $optf = $1;
-
 my @makefiles;
 if (defined $optf) {
     push @makefiles, $optf;
@@ -90,9 +88,6 @@ if (defined $optf) {
     }
     push @makefiles, "Makefile";
 }
-
-
-
 do {
     my $makefile = glob(shift(@makefiles));
     
@@ -156,11 +151,11 @@ do {
             #close MAIL;
         }
 
-        my $pipeline_channel_msg = "\@${slackname} $project_name :";
+        my $pipeline_channel_msg = "<\@${slackname}|cal> $project_name :";
         if ($opt{s} && ($retcode == 0 || $n == 0 || $n + 1 == $attempts)) {
             if ($retcode == 0) {
                 # op success
-                my $slack_msg = "*COMPLETE* $name :metal:";
+                my $slack_msg = "*COMPLETE* $name :the_horns:";
                 &slack($fin_slack, "$pipeline_channel_msg $slack_msg");
                 &slack($opt{c}, $slack_msg) if $opt{c};
             } else {
@@ -168,7 +163,7 @@ do {
                 my $slack_msg = "*FAILURE* $cwd/$logfile";
                 if ($n + 1 == $attempts) {
                     # final attempt
-                    $slack_msg = ":finnadie: $slack_msg";
+                    $slack_msg = ":-1: $slack_msg";
                     &slack($opt{c}, $slack_msg) if $opt{c};
                 }
                 &slack($err_slack, "$pipeline_channel_msg $slack_msg");

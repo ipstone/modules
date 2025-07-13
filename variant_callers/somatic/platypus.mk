@@ -12,7 +12,7 @@ platypus_indels: $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).platypus_indels.vcf)
 
 define platypus-tumor-normal-chr
 platypus/chr_vcf/$1_$2.$3.platypus.vcf : bam/$1.bam bam/$2.bam
-	$$(call RUN,-v $$(PLATYPUS_ENV) -n 4 -s 2G -m 3G,"platypus callVariants --regions=$3 \
+	$$(call RUN,-v $$(PLATYPUS_ENV) -n 8 -s 2G -m 3G,"platypus callVariants --regions=$3 \
 		--bamFiles=$$(<)$$(,)$$(<<) --nCPU 4 --refFile=$$(REF_FASTA) --output=$$@ --logFileName platypus/$1_$2.$3.log")
 endef
 $(foreach chr,$(CHROMOSOMES),\
@@ -24,12 +24,12 @@ SNP_FILTER_VCF = python modules/vcf_tools/snp_filter_vcf.py
 PLATYPUS_SOURCE_ANN_VCF = python modules/vcf_tools/annotate_source_vcf.py --source platypus
 
 vcf/%.platypus_indels.vcf : $(foreach chr,$(CHROMOSOMES),platypus/chr_vcf/%.$(chr).platypus.vcf)
-	$(call RUN,-c -s 4G -m 8G,"(grep '^#' $<; cat $^ | grep -v '^#' | \
+	$(call RUN,-c -s 8G -m 16G,"(grep '^#' $<; cat $^ | grep -v '^#' | \
 		$(VCF_SORT) $(REF_DICT) - ) | $(INDEL_FILTER_VCF) | $(PLATYPUS_SOURCE_ANN_VCF) > $@.tmp && \
 		$(call VERIFY_VCF,$@.tmp,$@)")
 
 vcf/%.platypus_snps.vcf : $(foreach chr,$(CHROMOSOMES),platypus/chr_vcf/%.$(chr).platypus.vcf)
-	$(call RUN,-c -s 4G -m 8G,"(grep '^#' $<; cat $^ | grep -v '^#' | \
+	$(call RUN,-c -s 8G -m 16G,"(grep '^#' $<; cat $^ | grep -v '^#' | \
 		$(VCF_SORT) $(REF_DICT) - ) | $(SNP_FILTER_VCF) | $(PLATYPUS_SOURCE_ANN_VCF) > $@.tmp && \
 		$(call VERIFY_VCF,$@.tmp,$@)")
 
