@@ -17,4 +17,4 @@
 # Known issues
 
 # Requirements
-- GNU Make 4.3 or newer is required for proper handling of spaces in variable definitions.
+- GNU Make 3.82 or newer is required.

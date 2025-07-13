@@ -148,11 +148,8 @@ else
 endif
 
 , := ,
-# define $(,) and $( ) for escaping commas and spaces
-space :=
-space +=
-space := $(space)
-space +=
+empty :=
+space := $(empty) $(empty)
 
 strip-suffix = $(firstword $(subst ., ,$(1)))
 
