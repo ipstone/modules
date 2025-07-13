@@ -391,4 +391,38 @@ The mouse_wes branch has successfully evolved from a simple mm10 reference confi
 
 ---
 
+## Recent Updates (July 13, 2025)
+
+### Mouse-Specific Feature Integration
+
+**Enhancement Commit**: Added mouse-specific features from projects_mouse_wes/modules_ipstone
+
+**New Features Added**:
+
+1. **Mouse-Specific SVABA Configuration**:
+   - Updated `sv_callers/svabaTN.mk` with mouse-specific dbSNP database
+   - Added: `DBSNP=/data/riazlab/lib/reference/dbsnp/mouse/mgp.v5.merged.indels.dbSNP142.normed.vcf`
+   - Added: Mouse-specific blacklist regions (`mouse_mm10_removed_blacklist-regon_no-chr.bed`)
+
+2. **PDX Analysis Tools**:
+   - Added `variant_callers/genotypepdx.mk` - Patient-Derived Xenograft analysis
+   - Added `variant_callers/genotypepdx.R` - Supporting R script
+
+3. **Mutational Signatures Analysis Suite** (12 files):
+   - Added complete `mut_sigs/` directory
+   - EMU signature analysis (`emu.mk`, `emuAbsolute.mk`)
+   - Signature reporting (`mutSigReport.Rmd`, `mutSigReport2.Rmd`)
+   - NMF analysis (`nmfMutSig.mk`)
+   - MATLAB and R analysis scripts
+
+4. **Enhanced PyClone Visualization Tools** (9 files):
+   - Added `clonality/plotpyclone.mk`
+   - Added comprehensive PyClone R scripts: `pyclonealldensity.R`, `pycloneconfig.R`, `pyclonelocidensity.R`, `pyclonelociscatter.R`, `pyclonelociscatterupdated.R`
+   - Added PyClone workflow tools: `runpyclone.mk`, `setuppyclone.mk`, `tsvforpyclone.R`
+
+**Total Files Added**: 24 new files + 1 modified file
+**Enhancement Impact**: The mouse_wes branch now combines the latest pipeline features with specialized mouse-specific analysis tools.
+
+---
+
 *This document was generated on July 13, 2025, and should be updated whenever significant changes are made to the mouse_wes branch.*
