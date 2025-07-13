@@ -631,6 +631,10 @@ TARGETS += genome_summary
 genome_summary :
 	$(call RUN_MAKE,modules/summary/genomesummary.mk)
 
+TARGETS += mouse_summary
+mouse_summary :
+	$(call RUN_MAKE,modules/summary/mousesummary.mk)
+
 TARGETS += mutation_summary
 mutation_summary :
 	$(call RUN_MAKE,modules/summary/mutationsummary.mk)
