@@ -155,10 +155,8 @@ endif
 
 # define $(,) and $( ) for escaping commas and spaces
 , := ,
-space :=
-space +=
-space := $(space)
-space +=
+empty :=
+space := $(empty) $(empty)
 
 # $(call strip-suffix,filename)
 strip-suffix = $(firstword $(subst ., ,$(1)))
