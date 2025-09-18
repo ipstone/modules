@@ -319,6 +319,10 @@ gridss_tumor_normal :
 TARGETS += manta_tumor_only
 manta_tumor_only :
 	$(call RUN_MAKE,modules/sv_callers/manta_tumor_only.mk)
+	
+TARGETS += gridss_tumor_only
+gridss_tumor_only :
+	$(call RUN_MAKE,modules/sv_callers/gridss_tumor_only.mk)
 
 TARGETS += brass
 brass :
