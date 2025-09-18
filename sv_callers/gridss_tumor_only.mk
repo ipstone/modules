@@ -48,7 +48,7 @@ gridss/$1/taskcomplete : vcf/$1.gridss_sv.vcf
 
 endef
 $(foreach sample,$(SAMPLES),\
-		$(eval $(call gridss-tumor-only,$(sample)))
+		$(eval $(call gridss-tumor-only,$(sample))))
 
 
 ..DUMMY := $(shell mkdir -p version; \
