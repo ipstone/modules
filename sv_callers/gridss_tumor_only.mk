@@ -11,9 +11,7 @@ GRIDSS_FILTER ?= gridss_somatic_filter
 GRIDSS_PON_DIR ?= $(HOME)/share/lib/resource_files/gridss/pon/
 
 gridss : $(foreach sample,$(SAMPLES),gridss/$(sample)/$(sample).gridss_sv.vcf) \
-	 $(foreach sample,$(SAMPLES),gridss/$(sample)/$(sample).gridss_sv_ft.vcf.bgz) \
-	 $(foreach sample,$(SAMPLES),vcf/$(sample).gridss_sv.vcf) \
-	 $(foreach sample,$(SAMPLES),gridss/$(sample)/taskcomplete)
+	 $(foreach sample,$(SAMPLES),vcf/$(sample).gridss_sv.vcf)
 
 define gridss-tumor-only
 gridss/$1/$1.gridss_sv.vcf : bam/$1.bam
@@ -27,25 +25,9 @@ gridss/$1/$1.gridss_sv.vcf : bam/$1.bam
 												    -b $$(GRIDSS_BLACKLIST) \
 												    ../../bam/$1.bam")
 												    
-gridss/$1/$1.gridss_sv_ft.vcf.bgz : gridss/$1/$1.gridss_sv.vcf
-	$$(call RUN,-c -n 1 -s 12G -m 18G -v $(GRIDSS_ENV),"set -o pipefail && \
-							    cd gridss/$1 && \
-							    $$(GRIDSS_FILTER) \
-							    --pondir $$(GRIDSS_PON_DIR) \
-							    --input $1.gridss_sv.vcf \
-							    --output $1.gridss_sv_ft.vcf \
-							    --fulloutput $1.gridss_sv_high_and_low_confidence_somatic.vcf \
-							    -n 1 \
-							    -t 2")
-
-vcf/$1.gridss_sv.vcf : gridss/$1/$1.gridss_sv_ft.vcf.bgz
-	$$(INIT) zcat $$(<) > $$(@)
+vcf/$1.gridss_sv.vcf : gridss/$1/$1.gridss_sv.vcf
+	$$(INIT) cat $$(<) > $$(@)
 	
-gridss/$1/taskcomplete : vcf/$1.gridss_sv.vcf
-	$$(INIT) rm -f gridss/$1/$1.bam.gridss.working/$1.bam.sv.bam && \
-		 rm -f gridss/$1/$1.bam.gridss.working/$1.bam.sv.bam.bai && \
-		 echo 'complete!' > $$(@)
-
 endef
 $(foreach sample,$(SAMPLES),\
 		$(eval $(call gridss-tumor-only,$(sample))))
