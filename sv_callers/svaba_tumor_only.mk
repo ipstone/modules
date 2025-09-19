@@ -33,12 +33,12 @@ vcf/$1.svaba_indels.vcf : svaba/$1.svaba.indel.vcf
 	$$(INIT) cat svaba/$1.svaba.indel.vcf > $$@
 
 endef
-$(foreach pair,$(SAMPLES),\
+$(foreach sample,$(SAMPLES),\
 		$(eval $(call svaba-tumor-only,$(sample))))
 
 
 ..DUMMY := $(shell mkdir -p version; \
-	     $(SVABA) --help &> version/svaba_tumor_normal.txt)
+	     $(SVABA) --help &> version/svaba_tumor_only.txt)
 .SECONDARY:
 .DELETE_ON_ERROR:
 .PHONY: svaba

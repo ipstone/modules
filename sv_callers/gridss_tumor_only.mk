@@ -1,6 +1,6 @@
 include modules/Makefile.inc
 
-LOGDIR = log/gridss_tumor_normal.$(NOW)
+LOGDIR = log/gridss_tumor_only.$(NOW)
 
 GRIDSS_CORES ?= 8
 GRIDSS_MEM_CORE ?= 6G
