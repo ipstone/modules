@@ -29,7 +29,7 @@ svaba/$1.svaba.sv.vcf : bam/$1.bam
 vcf/$1.svaba_sv.vcf : svaba/$1.svaba.sv.vcf
 	$$(INIT) cat $$< > $$@
 	
-vcf/$1.svaba_indels.vcf : svaba/$1.svaba.indel.vcf
+vcf/$1.svaba_indels.vcf : svaba/$1.svaba.sv.vcf
 	$$(INIT) cat svaba/$1.svaba.indel.vcf > $$@
 
 endef
