@@ -18,7 +18,7 @@ arguments <- parse_args(parser, positional_arguments = T)
 opt <- arguments$options
 
 bins = getBinAnnotations(binSize = 30)
-read_counts = binReadCounts(bins, bamfiles = paste0("../bam/", as.character(opt$sample_name), ".bam"))
+read_counts = binReadCounts(bins, bamfiles = paste0("bam/", as.character(opt$sample_name), ".bam"))
 read_counts_ft = applyFilters(read_counts, residual = TRUE, blacklist = TRUE)
 read_counts_ft = estimateCorrection(read_counts_ft)
 copy_number = correctBins(read_counts_ft)
