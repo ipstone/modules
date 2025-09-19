@@ -261,6 +261,10 @@ snp6 :
 TARGETS += cnv_kit
 cnv_kit :
 	$(call RUN_MAKE,modules/copy_number/cnvkit.mk)
+	
+TARGETS += qdna_seq
+qdna_seq :
+	$(call RUN_MAKE,modules/copy_number/qdnaseq.mk)
 
 
 #==================================================
