@@ -13,7 +13,7 @@ svaba : $(foreach sample,$(SAMPLES),vcf/$(sample).svaba_sv.vcf) \
 	$(foreach sample,$(SAMPLES),vcf/$(sample).svaba_indels.vcf)
 
 define svaba-tumor-only
-svaba/$1.svaba.sv.vcf svaba/$1.svaba.indel.vcf : bam/$1.bam
+svaba/$1.svaba.sv.vcf : bam/$1.bam
 	$$(call RUN,-c -n $(SVABA_CORES) -s 4G -m $(SVABA_MEM_CORE) -v $(SVABA_ENV) -w 72:00:00,"set -o pipefail && \
 												 mkdir -p svaba && \
 										 		 cd svaba && \
@@ -30,7 +30,7 @@ vcf/$1.svaba_sv.vcf : svaba/$1.svaba.sv.vcf
 	$$(INIT) cat $$< > $$@
 	
 vcf/$1.svaba_indels.vcf : svaba/$1.svaba.indel.vcf
-	$$(INIT) cat $$< > $$@
+	$$(INIT) cat svaba/$1.svaba.indel.vcf > $$@
 
 endef
 $(foreach pair,$(SAMPLES),\
