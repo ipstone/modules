@@ -9,8 +9,7 @@ SVABA_DBSNP ?= $(HOME)/share/lib/resource_files/svaba/dbsnp_indel.vcf
 SVABA_BLACKLIST ?= $(HOME)/share/lib/resource_files/svaba/wgs_blacklist_meres.bed
 SVABA ?= svaba
 
-svaba : $(foreach sample,$(SAMPLES),vcf/$(sample).svaba_sv.vcf) \
-	$(foreach sample,$(SAMPLES),vcf/$(sample).svaba_indels.vcf)
+svaba : $(foreach sample,$(SAMPLES),vcf/$(sample).svaba_sv.vcf)
 
 define svaba-tumor-only
 svaba/$1.svaba.sv.vcf : bam/$1.bam
@@ -29,9 +28,6 @@ svaba/$1.svaba.sv.vcf : bam/$1.bam
 vcf/$1.svaba_sv.vcf : svaba/$1.svaba.sv.vcf
 	$$(INIT) cat $$< > $$@
 	
-vcf/$1.svaba_indels.vcf : svaba/$1.svaba.sv.vcf
-	$$(INIT) cat svaba/$1.svaba.indel.vcf > $$@
-
 endef
 $(foreach sample,$(SAMPLES),\
 		$(eval $(call svaba-tumor-only,$(sample))))
