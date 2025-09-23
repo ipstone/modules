@@ -1,4 +1,4 @@
-# run manta on tumour samples
+# run manta on tumour-normal matched pairs
 
 include modules/Makefile.inc
 include modules/sv_callers/manta.inc

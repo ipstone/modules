@@ -2,7 +2,7 @@ include modules/Makefile.inc
 
 LOGDIR = log/svaba_tumor_normal.$(NOW)
 
-SVABA_CORES ?= 8
+SVABA_CORES ?= 16
 SVABA_MEM_CORE ?= 6G
 SVABA_REF ?= $(REF_FASTA)
 SVABA_DBSNP ?= $(HOME)/share/lib/resource_files/svaba/dbsnp_indel.vcf
@@ -13,7 +13,7 @@ svaba : $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).svaba_sv.vcf)
 
 define svaba-tumor-normal
 svaba/$1_$2.svaba.somatic.sv.vcf : bam/$1.bam bam/$2.bam
-	$$(call RUN,-c -n $(SVABA_CORES) -s 4G -m $(SVABA_MEM_CORE) -v $(SVABA_ENV) -w 72:00:00,"set -o pipefail && \
+	$$(call RUN,-c -n $(SVABA_CORES) -s 4G -m $(SVABA_MEM_CORE) -v $(SVABA_ENV) -w 144:00:00,"set -o pipefail && \
 												 mkdir -p svaba && \
 										 		 cd svaba && \
 												 $$(SVABA) run \

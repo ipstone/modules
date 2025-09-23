@@ -2,7 +2,8 @@ include modules/Makefile.inc
 
 LOGDIR ?= log/anotate_sv.$(NOW)
 
-SV_CALLERS = svaba manta gridss merged
+# SV_CALLERS = svaba manta gridss merged
+SV_CALLERS = manta gridss merged
 ANNOTATE_SV ?= $(HOME)/share/usr/env/annot_sv-3.1.3/opt/AnnotSV/bin/AnnotSV
 
 annotate_sv :  $(foreach pair,$(SAMPLE_PAIRS), \

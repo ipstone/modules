@@ -73,7 +73,7 @@ def select_annotations_with_impact(df, impact, select_effect=".*", filter_effect
 
 
 def create_absolute_df(absolute_somatic_txts, absolute_segments):
-    absdf = pd.concat([pd.read_csv(asegs, sep="\t", dtype={"Chromosome": str}, low_memory=False) for asegs
+    absdf = pd.concat([pd.read_csv(asegs, sep="\t", dtype={"Chromosome": str}) for asegs
                in absolute_somatic_txts], ignore_index=True)
     absdf["Chromosome"] = absdf.Chromosome.replace({"23": "X", "24": "Y"})
     absdf["TUMOR_SAMPLE"] = absdf.Sample.apply(lambda x: x.split("_")[0])
@@ -83,7 +83,7 @@ def create_absolute_df(absolute_somatic_txts, absolute_segments):
                          inplace=True)
     absdf.rename(columns={"Ref": "REF", "Alt": "ALT", "Chromosome": "CHROM", "Position": "POS"}, inplace=True)
     abscolumns = "cancer_cell_frac Pr_somatic_clonal ccf_CI95_low".split()
-    absegdf = pd.concat([pd.read_csv(f, dtype={"Chromosome": str}, sep="\t", low_memory=False) for f in absolute_segments],
+    absegdf = pd.concat([pd.read_csv(f, dtype={"Chromosome": str}, sep="\t") for f in absolute_segments],
                    ignore_index=True)[abscolumns]
     assert(len(absdf) == len(absegdf))
     for c in abscolumns:
@@ -202,7 +202,7 @@ def write_mutation_summary(snps_high_moderate, snps_low_modifier,
         absdf = None
     # create annotation df
     if annotation_tsv:
-        annotdf = pd.read_csv(annotation_tsv, sep="\t", encoding='utf-8', low_memory=False)
+        annotdf = pd.read_csv(annotation_tsv, sep="\t", encoding='utf-8')
     else:
         annotdf = None
     if summary_config:
@@ -217,7 +217,7 @@ def write_mutation_summary(snps_high_moderate, snps_low_modifier,
         "facetsLOHCall,pathogenicity,HOTSPOT,HOTSPOT_INTERNAL,cmo_hotspot,clonalStatus,ccf".split(",")
     # find chasm score columns, they are prefixed with chosen classifier
     #chasm_score_columns = [c for c in pd.read_csv(snps_high_moderate, encoding='utf-8', sep="\t").columns if "chasm_score" in c]
-    chasm_pred_columns = [c for c in pd.read_csv(snps_high_moderate, encoding='utf-8', sep="\t", low_memory=False).columns if "chasm_pred" in c]
+    chasm_pred_columns = [c for c in pd.read_csv(snps_high_moderate, encoding='utf-8', sep="\t").columns if "chasm_pred" in c]
     # add gene annotations and chasm score columns
     summary_columns += chasm_pred_columns + "cancer_gene_census,kandoth,lawrence,num_cancer_gene,hap_insuf,REF,ALT,ANN[*].IMPACT".split(",")
 
@@ -239,7 +239,7 @@ def write_mutation_summary(snps_high_moderate, snps_low_modifier,
         return df
 
     def read_tsv(tsv):
-        df = pd.read_csv(tsv, sep="\t", dtype={"CHROM": str}, low_memory=False)
+        df = pd.read_csv(tsv, sep="\t", dtype={"CHROM": str})
         for col in df.select_dtypes(include=['object']):
             if len(df.index) > 0 and type(df.ix[0, col]).__name__ == 'str':
                 df[col] = df[col].str.decode('unicode_escape').str.encode('ascii', 'ignore')

@@ -43,19 +43,19 @@ copynumber_summary:
 	$(MAKE) -f modules/copy_number/ntaiscore.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/copy_number/myriadhrdscore.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/genomesummary.mk)
-	
+
 TARGETS += hotspot_summary
 hotspot_summary:
 	$(MAKE) -f modules/variant_callers/genotypehotspots.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/hotspotsummary.mk)
-	
+
 TARGETS += viral_detection
 viral_detection:
 	$(MAKE) -f modules/fastq_tools/extractReads.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/fastq_tools/bamtoFasta.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/fastq_tools/blastReads.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/virus/kronaClassify.mk)
-	
+
 TARGETS += multisample_pyclone
 multisample_pyclone:
 	$(MAKE) -f modules/copy_number/ascat.mk -j $(NUM_JOBS)
@@ -63,21 +63,22 @@ multisample_pyclone:
 	$(MAKE) -f modules/clonality/setuppyclone.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/clonality/runpyclone.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/clonality/plotpyclone.mk)
-	
+
 TARGETS += run_cnvkit
 run_cnvkit :
 	$(MAKE) -f modules/copy_number/cnvkitcoverage.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/copy_number/cnvkitreference.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/copy_number/cnvkitfix.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/copy_number/cnvkitplot.mk)
-	
+
 TARGETS += mosdepth_wgs
 mosdepth_wgs :
-	$(call RUN_MAKE,modules/copy_number/mosdepth_wgs.mk) 
+	$(call RUN_MAKE,modules/copy_number/mosdepth_wgs.mk)
 
 TARGETS += indexcovTN
 indexcovTN :
-	$(call RUN_MAKE,modules/copy_number/indexcovTN.mk) 
+	$(call RUN_MAKE,modules/copy_number/indexcovTN.mk)
+
 
 #==================================================
 # aligners
@@ -166,7 +167,7 @@ strelka :
 TARGETS += scalpel
 scalpel :
 	$(call RUN_MAKE,modules/variant_callers/somatic/scalpel.mk)
-
+    
 TARGETS += lancet
 lancet :
 	$(call RUN_MAKE,modules/variant_callers/somatic/lancet.mk)
@@ -194,14 +195,14 @@ samtools_het :
 TARGETS += platypus
 platypus :
 	$(call RUN_MAKE,modules/variant_callers/somatic/platypus.mk)
-	
-TARGETS += msisensor
-msisensor :
-	$(call RUN_MAKE,modules/variant_callers/somatic/msisensor.mk)	
 
 TARGETS += mimsi
 mimsi :
 	$(call RUN_MAKE,modules/variant_callers/somatic/mimsi.mk)
+
+TARGETS += msisensor
+msisensor :
+	$(call RUN_MAKE,modules/variant_callers/somatic/msisensor.mk)	
 
 TARGETS += hla_polysolver
 hla_polysolver :
@@ -309,10 +310,6 @@ cnv_kit :
 # RNAseq structural variant callers
 #==================================================
 
-TARGETS += svaba
-svabaTN :
-	$(call RUN_MAKE,modules/sv_callers/svabaTN.mk)
-
 TARGETS += star_fusion
 star_fusion :
 	$(call RUN_MAKE,modules/sv_callers/starFusion.mk)
@@ -358,6 +355,10 @@ TARGETS += svaba_tumor_normal
 svaba_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/svaba_tumor_normal.mk)
 	
+TARGETS += svaba
+svabaTN :
+	$(call RUN_MAKE,modules/sv_callers/svabaTN.mk)
+
 TARGETS += gridss_tumor_normal
 gridss_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/gridss_tumor_normal.mk)
@@ -476,7 +477,7 @@ extract_unmapped :
 	
 TARGETS += extract_unmapped_pairs
 extract_unmapped_pairs :
-	$(call RUN_MAKE,modules/fastq_tools/extract_unmapped_pairs.mk)
+	$(call RUN_MAKE,modules/fastq_tools/extractunmappedpairs.mk)
 
 TARGETS += extract_any_unmapped_pairs
 extract_any_unmapped_pairs :
@@ -639,13 +640,7 @@ TARGETS += delmh_summary
 delmh_summary :
 	$(call RUN_MAKE,modules/summary/delmh_summary.mk)
 
-TARGETS += delmh_summary
-delmh_summary :	
-	$(call RUN_MAKE,modules/summary/delmh_summary.mk)
 
-TARGETS += delmh_summary_2callers
-delmh_summary_2callers :	
-	$(call RUN_MAKE,modules/summary/delmh_summary_2callers.mk)
 #==================================================
 # annotations
 #==================================================
@@ -683,7 +678,6 @@ TARGETS += hotspot_summary
 hotspot_summary :
 	$(MAKE) -f modules/variant_callers/genotypehotspots.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/hotspotsummary.mk)
-	
 	
 TARGETS += qdnaseq_copynumber_test
 qdnaseq_copynumber_test:

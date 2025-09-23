@@ -52,7 +52,7 @@ FACETS_PLOT_GENE_CN_OPTS = --sampleColumnPostFix '_LRR_threshold'
 facets : $(foreach pair,$(SAMPLE_PAIRS),facets/cncf/$(pair).txt facets/plots/log2/$(pair).pdf) facets/summary/bygene.txt facets/summary/bygene.pdf facets/summary/summary.tsv
 
 facets/summary/summary.tsv : $(foreach pair,$(SAMPLE_PAIRS),facets/cncf/$(pair).Rdata)
-	$(call RUN,-c -s 8G -m 12G,"$(CREATE_FACETS_SUMMARY) --outFile $@ $^")
+	$(call RUN,-c -s 18G -m 24G -w 7200,"$(CREATE_FACETS_SUMMARY) --outFile $@ $^")
 
 facets/vcf/dbsnp_het_gatk.snps.vcf : $(FACETS_DBSNP) $(foreach sample,$(SAMPLES),gatk/vcf/$(sample).variants.snps.het.pass.vcf)
 	$(call RUN,-c -s 18G -m 24G -w 7200,"$(call GATK_MEM,3G) $(if $(TARGETS_FILE),-L $(TARGETS_FILE)) -T CombineVariants --minimalVCF $(foreach i,$^, --variant $i) -R $(REF_FASTA) -o $@")
@@ -61,32 +61,32 @@ facets/vcf/dbsnp_het_gatk.snps.vcf : $(FACETS_DBSNP) $(foreach sample,$(SAMPLES)
 	$(call RUN,-c -s 18G -m 24G -w 7200,"$(call GATK_MEM,8G) -V $< -T VariantFiltration -R $(REF_FASTA) --genotypeFilterName 'hom' --genotypeFilterExpression 'isHet == 0' -o $@")
 
 facets/vcf/targets_dbsnp.vcf : $(TARGETS_FILE)
-	$(INIT) $(BEDTOOLS) intersect -header -u -a $(HOME)/share/reference/dbsnp_138.b37.gmaf_subset.vcf -b $< > $@
+	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@
 
 ifeq ($(CONVERT_BASECOUNT),true)
 CONVERT_BC_TO_SNP_PILEUP = python modules/copy_number/convert_basecount_to_snp_pileup.py
 facets/pileup/%.gz : facets/base_count/%.bc.gz
-	$(call RUN,-s 12G -m 14G,"$(CONVERT_BC_TO_SNP_PILEUP) $< | gzip -c > $@")
+	$(call RUN,-s 18G -m 48G -w 7200,"$(CONVERT_BC_TO_SNP_PILEUP) $< | gzip -c > $@")
 else
 define snp-pileup-tumor-normal
 facets/pileup/$1_$2.gz : bam/$1.bam bam/$2.bam $$(FACETS_SNP_VCF)
-	$$(call RUN,-c -s 8G -m 20G,"rm -f $$@ && $$(SNP_PILEUP) $$(SNP_PILEUP_OPTS) $$(<<<) $$@ $$(<<) $$(<)")
+	$$(call RUN,-c -s 18G -m 48G -w 7200,"rm -f $$@ && $$(SNP_PILEUP) $$(SNP_PILEUP_OPTS) $$(<<<) $$@ $$(<<) $$(<)")
 endef
 $(foreach pair,$(SAMPLE_PAIRS),$(eval $(call snp-pileup-tumor-normal,$(tumor.$(pair)),$(normal.$(pair)))))
 endif
 
 
-facets/cncf/%.cncf.txt facets/cncf/%.Rdata : facets/snp_pileup/%.snp_pileup.gz
-	$(call RUN,-c -v $(FACETS_ENV) -s 12G -m 48G -w 7200,"$(RUN_FACETS) $(call FACETS_OPTS,$*) --out_prefix $(@D)/$* $<")
+facets/cncf/%.txt facets/cncf/%.Rdata : facets/pileup/%.gz
+	$(call RUN,-c -v $(FACETS_ENV) -s 18G -m 60G -w 7200,"$(RUN_FACETS) $(call FACETS_OPTS,$*) --out_prefix $(@D)/$* $<")
 
-facets/plots/%.cnlr_plot.pdf : facets/cncf/%.Rdata
+facets/plots/log2/%.pdf : facets/cncf/%.Rdata
 	$(call RUN,-v $(FACETS_ENV) -s 12G -m 48G -w 7200,"$(PLOT_FACETS) --centromereFile $(CENTROMERE_TABLE) --outPrefix $(@D)/$* $<")
 
-facets/geneCN.txt : $(foreach pair,$(SAMPLE_PAIRS),facets/cncf/$(pair).Rdata)
-	$(call RUN,-c -s 12G -m 48G -w 7200,"$(FACETS_GENE_CN) $(FACETS_GENE_CN_OPTS) --outFile $@ $^")
+facets/summary/bygene.txt : $(foreach pair,$(SAMPLE_PAIRS),facets/cncf/$(pair).Rdata)
+	$(call RUN,-c -s 18G -m 48G -w 7200,"$(FACETS_GENE_CN) $(FACETS_GENE_CN_OPTS) --outFile $@ $^")
 
-facets/geneCN.pdf : facets/geneCN.txt
-	$(call RUN,-s 12G -m 24G -w 7200,"$(FACETS_PLOT_GENE_CN) $(FACETS_PLOT_GENE_CN_OPTS) $< $@")
+facets/summary/bygene.pdf : facets/summary/bygene.txt
+	$(call RUN,-s 18G -m 48G,"$(FACETS_PLOT_GENE_CN) $(FACETS_PLOT_GENE_CN_OPTS) $< $@")
 
 include modules/variant_callers/gatk.mk
 include modules/bam_tools/processBam.mk

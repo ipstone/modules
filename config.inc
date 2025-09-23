@@ -14,12 +14,8 @@ R ?= R
 MY_RSCRIPT ?= Rscript
 RSCRIPT ?= Rscript
 
-# General python 2.7 environment
-ANACONDA_27_ENV ?= $(HOME)/share/usr/anaconda-envs/anaconda-2.7
-
-# SUFAM python environment
-SUFAM_ENV ?= $(HOME)/share/usr/anaconda-envs/sufam-dev
-
+ANACONDA_27_ENV = $(HOME)/share/usr/anaconda-envs/anaconda-2.7
+SUFAM_ENV = $(HOME)/share/usr/anaconda-envs/sufam-dev
 MUTSIG_REPORT_ENV = $(HOME)/share/usr/anaconda-envs/mutsig-report-0.0.1
 JRFLAB_MODULES_ENV = $(HOME)/share/usr/anaconda-envs/jrflab-modules-0.1.4
 ONCOTATOR_ENV = $(HOME)/share/usr/venv/oncotator-1.9.2.0
@@ -39,14 +35,14 @@ ANNOTATE_SV_ENV ?= $(HOME)/share/usr/env/annot_sv-3.1.3
 VIOLA_ENV = $(HOME)/share/usr/env/viola-sv-1.0.2
 SIGNATURE_TOOLS_ENV = $(HOME)/share/usr/env/r-signature.tools.lib-2.2.0
 CNVKIT_ENV ?= $(HOME)/share/usr/env/cnvkit-0.9.9
-STARFISH_ENV = $(HOME)/share/usr/env/r-starfish-0.11
+STARFISH_ENV ?= $(HOME)/share/usr/env/r-starfish-0.11
 MEDICC_ENV = $(HOME)/share/usr/env/medicc2-0.8.1
 VARIANT_ANNOTATION_ENV = $(HOME)/share/usr/env/r-variantannotation-1.44.0
 FACETS_SUITE_ENV = $(HOME)/share/usr/env/r-facets-suite-2.0.8
 CRAVAT_ENV = $(HOME)/share/usr/anaconda-envs/open-cravat
 POLYSOLVER_ENV = $(HOME)/share/usr/anaconda-envs/hla-polysolver
 MSISENSOR_ENV = $(HOME)/share/usr/anaconda-envs/msisensor
-MIMSI_ENV = $(HOME)/share/usr/env/mimsi-0.4.4
+MIMSI_ENV ?= $(HOME)/share/usr/env/mimsi-0.4.4
 
 JARDIR ?= $(HOME)/share/usr/lib/java
 

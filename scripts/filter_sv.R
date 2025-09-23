@@ -18,7 +18,7 @@ opt = arguments$options
 vcf = readr::read_tsv(file = as.character(opt$input_file), comment = "#", col_names = FALSE, col_types = cols(.default = col_character())) %>%
       readr::type_convert() %>%
       dplyr::filter(!grepl("SUPP_VEC=110", X8, fixed = TRUE)) %>%
-      dplyr::mutate(X3 = X12) %>%
+      dplyr::mutate(X3 = X11) %>%
       dplyr::mutate(X3 = unlist(lapply(X3, function(x) { unlist(strsplit(x, split = ":", fixed = TRUE))[8] }))) %>%
       dplyr::mutate(X3 = gsub(pattern = "_", replacement = ":", x = X3, fixed = TRUE)) %>%
       dplyr::mutate(X5 = case_when(
@@ -41,9 +41,8 @@ vcf = readr::read_tsv(file = as.character(opt$input_file), comment = "#", col_na
 		    FILTER = X7,
 		    INFO = X8,
 		    FORMAT = X9,
-		    SVABA = X10,
-		    GRIDSS = X11,
-		    MANTA = X12)
+		    GRIDSS = X10,
+		    MANTA = X11)
 
 readr::write_tsv(x = vcf, path = as.character(opt$output_file), append = TRUE, col_names = TRUE)
 

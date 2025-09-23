@@ -11,7 +11,7 @@ MIN_MAP_QUAL ?= 1
 MIN_VAR_FREQ ?= $(if $(findstring false,$(VALIDATION)),0.05,0.000001)
 
 VARSCAN_MEM = $(JAVA7) -Xmx$1 -jar $(VARSCAN_JAR)
-VARSCAN = $(call VARSCAN_MEM,12G)
+VARSCAN = $(call VARSCAN_MEM,8G)
 VARSCAN_OPTS = $(if $(findstring true,$(VALIDATION)),--validation 1 --strand-filter 0) --min-var-freq $(MIN_VAR_FREQ)
 VARSCAN_SOURCE_ANN_VCF = python modules/vcf_tools/annotate_source_vcf.py --source varscan
 VPATH ?= bam
@@ -86,6 +86,7 @@ define convert-varscan-tumor-normal
 varscan/vcf/$1_$2.$3.Somatic.vcf : varscan/tables/$1_$2.$3.Somatic.txt
 	$$(call RUN,-s 4G -m 8G,"set -o pipefail && \
 				 $$(VARSCAN_TO_VCF) -f $$(REF_FASTA) -t $1 -n $2 $$(<) | $$(VCF_SORT) $$(REF_DICT) - > $$(@)")
+
 
 endef
 $(foreach pair,$(SAMPLE_PAIRS), \

@@ -23,10 +23,10 @@ strelka/$1_$2/Makefile : bam/$1.bam bam/$2.bam
 	$$(call RUN,-N strelka_$1_$2,"rm -rf $$(@D) && $$(CONFIGURE_STRELKA) --tumor=$$< --normal=$$(<<) --ref=$$(REF_FASTA) --config=$$(STRELKA_CONFIG) --output-dir=$$(@D)")
 
 strelka/$1_$2/task.complete : strelka/$1_$2/Makefile
-	$$(call RUN,-N $1_$2.strelka -n 10 -s 2G -m 3G -w 7200,"make -j 10 -C $$(<D)")
+	$$(call RUN,-N $1_$2.strelka -n 10 -s 4G -m 6G -w 7200,"make -j 10 -C $$(<D)")
 
 strelka/vcf/$1_$2.%.vcf.tmp : strelka/vcf/$1_$2.%.vcf
-	$$(call RUN,-s 4G -m 8G -w 7200,"$$(RSCRIPT) modules/scripts/swapvcf.R --file $$< --tumor $1 --normal $2")
+	$$(call RUN,-s 8G -m 16G -w 7200,"$$(RSCRIPT) modules/scripts/swapvcf.R --file $$< --tumor $1 --normal $2")
 
 vcf/$1_$2.%.vcf : strelka/vcf/$1_$2.%.vcf.tmp
 	$$(INIT) perl -ne 'if (/^#CHROM/) { s/NORMAL/$2/; s/TUMOR/$1/; } print;' $$< > $$@ && $$(RM) $$<

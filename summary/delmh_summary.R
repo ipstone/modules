@@ -1,102 +1,118 @@
-## Summary for delmh calculated & filtered calc_delmh.py output:
-##         tsv/all.delmh_filtered.tsv
-##              (filtered from tsv/all.delmh_found.tsv)
-##   The output is stored at: summary/delmh_summary.tsv
-#
-## Output fields Definition
-#  $ del_count             : int  Total deletion counts (after filtering)
-#  $ avg_delen             : num  Average/mean deletion length
-#  $ median_delen          : num  Median deletion length
-#  $ deln4_count           : int  Counts of deletions with 4 nucleotide or more
-#  $ deln4_mhlen_3_counts  : num  Counts of del-len>=4, and mh>=3
-#  $ deln4_mhlen_3_avg_deln: num  Same deleteion as the line above - average len
-#  $ delmh_prop            : num  Proportion of deln4_mhlen3/total-deletion count
-#  $ delmh_deln4_prop      : num  Proportions over del-len>=4 count
+#!/usr/bin/env Rscript
 
-library(data.table)
-rm(list = ls())
+suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages(library("dplyr"))
+suppressPackageStartupMessages(library("magrittr"))
+suppressPackageStartupMessages(library("readr"))
+suppressPackageStartupMessages(library("BSgenome.Hsapiens.UCSC.hg19"))
 
-count_deln_with_microh_len <- function(df, cutoff, mhlen, final) {
-    ## helper function to count deletions:
-    ##   w. del-length >=cutoff, and microhomology-length >=mhlen
-    count <- df[(deletion_length >= cutoff) & (mh_length >= mhlen), .N,
-        by = SAMPLE.TUMOR
-    ]
-    fieldname <- paste("deln", cutoff, "_mhlen_", mhlen, "_counts", sep = "")
-    count[[fieldname]] <- count$N
-    count$N <- NULL
-
-    ## Calculate the average deletion length for the critera
-    avg_deln <- df[(deletion_length >= cutoff) & (mh_length >= mhlen),
-        .(avg_delen = mean(deletion_length)),
-        by = SAMPLE.TUMOR
-    ]
-    fieldname2 <- paste("deln", cutoff, "_mhlen_",
-        mhlen, "_avg_deln",
-        sep = ""
-    )
-    avg_deln[[fieldname2]] <- avg_deln$avg_delen
-    avg_deln$avg_delen <- NULL
-
-    # Merge the calculated counts and average deletion length with mh
-    merge_count <- merge(final, count, by = "SAMPLE.TUMOR", all.x = TRUE)
-    merge_count <- merge(merge_count, avg_deln, by = "SAMPLE.TUMOR", all.x = TRUE)
-    merge_count[[fieldname]][is.na(merge_count[[fieldname]])] <- 0
-    return(merge_count)
+if (!interactive()) {
+    options(warn = -1, error = quote({ traceback(); q('no', status = 1) }))
 }
 
-get_deln_with_microh <- function(del_count, mh) {
-    ## helper function to call functions to calculate with different parameters
-    del_mh_collections <- del_count
-    # This function can be tweaked to add additional definitions of delmh, such as:
-    #   For each of the del length of 3-10
-    #   count microhomologies of 1+, 2+, 3+, 4+
-    #   Actually for the moment only interested in del4 or more, and mh 3+
-    for (del in c(4)) {
-        for (mht in c(3)) {
-            del_mh_collections <- count_deln_with_microh_len(
-                mh, del, mht,
-                del_mh_collections
-            )
-        }
-    }
-    return(del_mh_collections)
+args_list <- list(make_option("--input_file", default = NA, type = 'character', help = "file name and path"))
+				  
+parser <- OptionParser(usage = "%prog", option_list = args_list)
+arguments <- parse_args(parser, positional_arguments = T)
+opt <- arguments$options
+
+all_vars = read_tsv(file=opt$input_file, col_types = cols(.default = col_character())) %>%
+		   type_convert()
+		   
+all_tumors = all_vars %>%
+			 .[["TUMOR_SAMPLE"]]
+
+all_normals = all_vars %>%
+			 .[["NORMAL_SAMPLE"]]
+
+all_patients = unique(paste0(all_tumors, "_", all_normals))
+
+all_vars = all_vars %>%
+	   filter(Variant_Classification=="Frame_Shift_Del" | Variant_Classification=="In_Frame_Del") %>%
+	   filter((grepl("varscan", variantCaller) & grepl("strelka", variantCaller)) |
+	   	  ((grepl("platypus", variantCaller) & grepl("scalpel", variantCaller)) & ((nchar(REF)-nchar(ALT))>4) & Variant_Classification!="In_Frame_Del") |
+	   	  ((grepl("platypus", variantCaller) & grepl("lancet", variantCaller)) & ((nchar(REF)-nchar(ALT))>4) & Variant_Classification!="In_Frame_Del"))
+
+patient_summary = data_frame(SAMPLE_UUID = all_patients)
+del_count = all_vars %>%
+			mutate(SAMPLE_UUID = paste0(TUMOR_SAMPLE, "_", NORMAL_SAMPLE)) %>%
+			dplyr::group_by(SAMPLE_UUID) %>%
+			dplyr::summarize(del_count = n())
+mean_delen = all_vars %>%
+			 mutate(del_len = nchar(REF)-1) %>%
+			 mutate(SAMPLE_UUID = paste0(TUMOR_SAMPLE, "_", NORMAL_SAMPLE)) %>%
+			 dplyr::group_by(SAMPLE_UUID) %>%
+			 dplyr::summarize(mean_delen = mean(del_len))
+median_delen = all_vars %>%
+			   mutate(del_len = nchar(REF)-1) %>%
+			   mutate(SAMPLE_UUID = paste0(TUMOR_SAMPLE, "_", NORMAL_SAMPLE)) %>%
+			   dplyr::group_by(SAMPLE_UUID) %>%
+			   dplyr::summarize(median_delen = median(del_len))
+deln4_count = all_vars %>%
+			  mutate(del_len = nchar(REF)-1) %>%
+			  mutate(SAMPLE_UUID = paste0(TUMOR_SAMPLE, "_", NORMAL_SAMPLE)) %>%
+			  dplyr::group_by(SAMPLE_UUID) %>%
+			  dplyr::summarize(deln4_count = sum(del_len>=4))
+			  
+'getSeqFrom' <- function(chr, start, end)
+{
+	ret = as.character(getSeq(x=BSgenome.Hsapiens.UCSC.hg19, names=chr, start=start, end=end, strand="+", as.character=TRUE))
+	return(invisible(ret))
 }
 
-calc_delmh_summary <- function(input = "tsv/all.delmh_found.tsv") {
-    ## Main function to calculate delmh_summary
-    # Summary deletion, and delmh related metrics per SAMPLE.TUMOR
-    mh <- fread(input, na = "") # na option here is just from previous code
 
-    ## For microhomogy to start: explore the total length of microhomogy (not distinguish up/down)
-    mh$up_mh_len <- ifelse(is.na(mh$up_mh), 0, nchar(mh$up_mh))
-    mh$down_mh_len <- ifelse(is.na(mh$down_mh), 0, nchar(mh$down_mh))
-    mh$mh_length <- pmax(mh$up_mh_len, mh$down_mh_len)
-    mh[, deletion_length := .(end_position - start_position + 1)]
-
-    # Calculate the generate deletion counts, average/mean deletion length
-    # Input is the deletion call results - mh
-    avg_del <- mh[, .(avg_delen = mean(deletion_length)), by = SAMPLE.TUMOR]
-    median_del <- mh[, .(median_delen = median(deletion_length)), by = SAMPLE.TUMOR]
-    del_count <- mh[, .N, by = SAMPLE.TUMOR]
-    del_count$del_count <- del_count$N
-    del_count$N <- NULL
-    del_summary <- merge(del_count, avg_del, by = "SAMPLE.TUMOR")
-    del_summary <- merge(del_summary, median_del, by = "SAMPLE.TUMOR")
-
-    # Adding the counts for deletion-length>=4 per sample
-    deln4_count <- mh[deletion_length >= 4, .N, by = SAMPLE.TUMOR]
-    deln4_count$deln4_count <- deln4_count$N
-    deln4_count$N <- NULL
-    del_summary <- merge(del_summary, deln4_count, by = "SAMPLE.TUMOR")
-
-    ## Calculate all different mutation counts and save
-    delmh_summary <- get_deln_with_microh(del_summary, mh)
-    delmh_summary$delmh_prop <- delmh_summary$deln4_mhlen_3_counts / delmh_summary$del_count
-    delmh_summary$delmh_deln4_prop <- delmh_summary$deln4_mhlen_3_counts / delmh_summary$deln4_count
-    return(delmh_summary)
+'checkHomLen' <- function(deleted, next50)
+{
+	ret = 0
+	for (i in 1:nchar(deleted)) {
+		if (substr(deleted, 1, i) == substr(next50, 1, i)) {
+			ret = i
+		}
+	}
+    return(invisible(ret))
 }
 
-# delmh_summary = calc_delmh_summary(input="tsv/all.delmh_found.tsv")
-delmh_summary <- calc_delmh_summary(input = "tsv/delmh_filtered.tsv")
-fwrite(delmh_summary, "tsv/delmh_summary.tsv", sep = "\t", na = "")
+hml_down = hml_up = NULL
+for (i in 1:nrow(all_vars)) {
+	chr = paste0("chr", all_vars[i,"CHROM"])
+	start = as.numeric(all_vars[i,"POS"])+1
+	n = as.numeric(nchar(all_vars[i,"REF"]))-1
+	
+	deleted = getSeqFrom(chr = chr, start = start, end = start + n - 1)
+	prevn = getSeqFrom(chr = chr, start = start - n, end = start - 1)
+	nextn = getSeqFrom(chr = chr, start = start + n, end = start + 2*n - 1)
+	
+	hml_down = c(hml_down, checkHomLen(deleted = deleted, next50 = prevn))
+	hml_up = c(hml_up, checkHomLen(deleted = deleted, next50 = nextn))
+}
+
+mh_3 = data_frame(SAMPLE_UUID = paste0(all_vars$TUMOR_SAMPLE, "_", all_vars$NORMAL_SAMPLE),
+				   del_len = nchar(all_vars$REF)-1,
+				   max_mhlen_5p = hml_down,
+				   max_mhlen_3p = hml_up,
+	  			   max_mhlen = apply(cbind(hml_down, hml_up), 1, max)) %>%
+	    filter(del_len >= 4) %>%
+	    mutate(is_3 = ifelse(max_mhlen>=3, 1, 0)) %>%
+	    dplyr::group_by(SAMPLE_UUID) %>%
+	    dplyr::summarize(deln4_mhlen_3_counts = sum(is_3))
+
+mhl_3 = data_frame(SAMPLE_UUID = paste0(all_vars$TUMOR_SAMPLE, "_", all_vars$NORMAL_SAMPLE),
+				   del_len = nchar(all_vars$REF)-1,
+				   max_mhlen_5p = hml_down,
+				   max_mhlen_3p = hml_up,
+	  			   max_mhlen = apply(cbind(hml_down, hml_up), 1, max)) %>%
+	    filter(del_len >= 4) %>%
+	    filter(max_mhlen >= 3) %>%
+	    dplyr::group_by(SAMPLE_UUID) %>%
+	    dplyr::summarize(deln4_mhlen_3_avg_deln = mean(del_len))				 
+
+patient_summary = left_join(patient_summary, del_count, by="SAMPLE_UUID") %>%
+				  left_join(mean_delen, by="SAMPLE_UUID") %>%
+				  left_join(median_delen, by="SAMPLE_UUID") %>%
+				  left_join(deln4_count, by="SAMPLE_UUID") %>%
+				  left_join(mh_3, by="SAMPLE_UUID") %>%
+				  left_join(mhl_3, by="SAMPLE_UUID") %>%
+				  mutate(delmh_prop = deln4_mhlen_3_counts/del_count) %>%
+				  mutate(delmh_del4n_prop = deln4_mhlen_3_counts/deln4_count)
+				  
+write_tsv(patient_summary, path="summary/tsv/delmh_summary.tsv")

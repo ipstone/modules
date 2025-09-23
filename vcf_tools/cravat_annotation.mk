@@ -12,7 +12,7 @@ define cravat-annotation
 cravat/$1.vcf : vcf_ann/$1.gatk_snps.vcf vcf_ann/$1.gatk_indels.vcf
 	$$(call RUN,-c -s 9G -m 12G -w 24:00:00,"set -o pipefail && \
 						 $(RSCRIPT) modules/vcf_tools/combine_vcf.R \
-						 --sample_name $$(*)")
+						 --sample_name $1")
 	
 cravat/$1.maf : cravat/$1.vcf
 	$$(call RUN,-c -s 9G -m 12G -v $(VEP_ENV) -w 24:00:00,"set -o pipefail && \

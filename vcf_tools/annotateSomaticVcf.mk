@@ -84,7 +84,7 @@ somatic_tables : $(foreach type,$(VARIANT_TYPES),\
 	$(foreach pair,$(SAMPLE_PAIRS),tables/$(pair).$(type).tab.txt) \
 	alltables/allTN.$(type).tab.txt) tsv/all.somatic_variants.tsv
 
-MERGE_SCRIPT = $(call RUN,-c -s 16G -m 24G -w 7200,"$(MERGE_VCF) --pass_only --out_file $@.tmp $^ && $(call VERIFY_VCF,$@.tmp,$@)")
+MERGE_SCRIPT = $(call RUN,-c -s 6G -m 7G,"$(MERGE_VCF) --pass_only --out_file $@.tmp $^ && $(call VERIFY_VCF,$@.tmp,$@)")
 define somatic-merged-vcf
 # first filter round
 vcf/%.$1.ft.vcf : $$(if $$(strip $$(call SOMATIC_FILTER1,$1)),$$(foreach ft,$$(call SOMATIC_FILTER1,$1),vcf/%.$1.$$(ft).vcf),vcf/%.$1.vcf)
@@ -110,9 +110,9 @@ $(foreach type,$(VARIANT_TYPES),$(eval $(call somatic-merged-vcf,$(type))))
 
 define somatic-merge-vcf-tumor-normal
 vcf/$1_$2.%.reord.vcf.gz : vcf_ann/$1_$2.%.vcf
-	$$(call RUN,-c -s 12G -m 16G -w 7200,"$$(BCFTOOLS2) view -l 5 -s $1$$(,)$2 -O z <(bgzip -c $$^) > $$@")
+	$$(call RUN,-c -s 4G -m 5G,"$$(BCFTOOLS2) view -l 5 -s $1$$(,)$2 -O z <(bgzip -c $$^) > $$@")
 vcf_ann/$1_$2.somatic_variants.vcf : $$(foreach type,$$(VARIANT_TYPES),vcf/$1_$2.$$(type).reord.vcf.gz vcf/$1_$2.$$(type).reord.vcf.gz.tbi)
-	$$(call RUN,-c -s 12G -m 16G -w 7200,"$$(BCFTOOLS2) concat -O v -a -D $$(filter %.vcf.gz,$$^) > $$@")
+	$$(call RUN,-c -s 4G -m 6G,"$$(BCFTOOLS2) concat -O v -a -D $$(filter %.vcf.gz,$$^) > $$@")
 endef
 $(foreach pair,$(SAMPLE_PAIRS),$(eval $(call somatic-merge-vcf-tumor-normal,$(tumor.$(pair)),$(normal.$(pair)))))
 
@@ -122,12 +122,12 @@ variant_count.tsv : $(foreach pair,$(SAMPLE_PAIRS),$(foreach type,$(VARIANT_TYPE
 SOMATIC_VCF2TSV = python modules/vcf_tools/somatic_vcf2tsv.py
 define somatic-vcf2tsv-type
 tsv/%.$1.tsv : vcf_ann/%.$1.vcf
-	$$(call RUN,-c -s 12G -m 16G -w 7200,"$$(SOMATIC_VCF2TSV) --normal $$(normal.$$*) $$< > $$@")
+	$$(call RUN,-c -s 4G -m 6G,"$$(SOMATIC_VCF2TSV) --normal $$(normal.$$*) $$< > $$@")
 endef
 $(foreach type,$(VARIANT_TYPES) somatic_variants,$(eval $(call somatic-vcf2tsv-type,$(type))))
 
 tsv/all.%.tsv : $(foreach pair,$(SAMPLE_PAIRS),tsv/$(pair).%.tsv)
-	$(call RUN,-s 12G -m 16G -w 7200,"(sed -n 1p $<; for x in $^; do sed 1d \$$x; done) > $@")
+	$(call RUN,-s 4G -m 6G,"(sed -n 1p $<; for x in $^; do sed 1d \$$x; done) > $@")
 
 .DELETE_ON_ERROR:
 .SECONDARY:
