@@ -1,39 +1,68 @@
 # Title:
    ABSOLUTE Workflow
 
+# Overview
+   ABSOLUTE is orchestrated by `modules/clonality/absoluteSeq.mk`.  Run the
+   bundled make target after somatic calls and copy-number profiling complete to
+   generate ABSOLUTE results, review objects, and integrated mutation tables.
+
 # Prerequisites
-- Curated mutation table (`muts.csv`) produced from `_docs/filtering_dataset.md` steps with ≥1 mutation per sample.
-- Facets copy-number output (`facets/cncf/*.txt`).
-- Access to an R host with ABSOLUTE dependencies (e.g. `swan`).
+   - `make config` has been run so `SAMPLE_PAIRS`, `tumor.<pair>`, and
+     `normal.<pair>` are defined.
+   - Somatic tables exist (`tables/<pair>.mutect.tab.txt` and
+     `tables/<pair>.strelka_varscan_indels.tab.txt`) from `make somatic_variants`.
+   - Copy-number segments are available.  The default configuration uses
+     `facets/cncf/<pair>.cncf.txt`.  Override `USE_TITAN_COPYNUM` or
+     `USE_ONCOSCAN_COPYNUM` in `project_config.yaml` if your study relies on
+     alternate callers and re-run `make config`.
+   - An R environment with the `ABSOLUTE`, `dplyr`, `stringr`, and `readr`
+     packages is reachable by the cluster worker (activate or source it before
+     launching the target).
 
-# Directory Setup
-1. `mkdir absolute`
-2. Copy `muts.csv` into `absolute/`.
-3. Copy all `facets/cncf/*.cncf.txt` files into `absolute/`.
+# Running
+   ```bash
+   # prerequisites: make somatic_variants, make facets (or your CN caller)
+   make absolute_seq USE_CLUSTER=false       # or omit flag for scheduler run
+   ```
+   The driver target fans out to these subtasks:
+   - `absolute/tables/<pair>.somatic.txt` - merged SNV/indel inputs prepared
+     from the Mutect and Strelka tables.
+   - `absolute/segment/<pair>.seg.txt` - segmentation generated from FACETS
+     (or Titan/Oncoscan outputs when enabled).
+   - `absolute/maf/<pair>.maf.txt` - ABSOLUTE-formatted MAF files.
+   - `absolute/results/<pair>.ABSOLUTE.RData` - per-sample ABSOLUTE solutions.
+   - `absolute/review/all.PP-calls_tab.txt` and
+     `absolute/review/all.PP-modes.data.RData` - review bundles for manual
+     curation.
 
-# Input Generation
-1. SSH to an R-friendly node: `ssh swan`.
-2. Run `Rscript Make_ABS_muts_Input.R` inside `absolute/`.
-   - If errors occur, run line-by-line; a common issue is the tumor column labelled `SAMPLE.TUMOR` instead of `TUMOR_SAMPLE`.
-3. Execute `Rscript Make_SegFromFacets.R` to generate segmentation input.
+# Manual Review
+   1. Inspect the plots under `absolute/review/`.  Choose a diploid solution for
+      each sample using the standard ABSOLUTE review interface or by editing
+      `absolute/review/all.PP-calls_tab.txt`.
+   2. Once decisions are recorded, save the file as
+      `absolute/review/all.PP-calls_tab.reviewed.txt` (same directory).
+   3. Re-run `make absolute_seq` to materialise
+      `absolute/reviewed/all.seq.ABSOLUTE.table.txt` and
+      `absolute/tables/<pair>.absolute.txt`.  These contain the curated purity,
+      ploidy, and CCF annotations.
 
-# Parameter Tuning (Highly Segmented Facets)
-1. Increase the FACETS critical values in `project_config.yaml` by 50–100.
-2. Re-run `make config`.
-3. Clean previous FACETS artefacts: remove sample-specific files in `facets/` (plots, `geneCN.txt`, and entries under `facets/cncf/`).
-4. Re-run `make facets` and inspect plots.
-5. Repeat adjustments until copy-number profiles look reasonable.
-6. Restart ABSOLUTE prep from `Make_ABS_muts_Input.R` after each FACETS iteration.
+# Outputs
+```
+absolute/results/<pair>.ABSOLUTE.RData
+absolute/review/all.PP-calls_tab.txt
+absolute/review/all.PP-calls_tab.reviewed.txt  # user-supplied
+absolute/reviewed/all.seq.ABSOLUTE.table.txt
+absolute/tables/<pair>.absolute.txt
+absolute/reviewed/SEG_MAF/<pair>_ABS_MAF.txt
+```
 
-# Running ABSOLUTE
-1. Confirm paths referenced inside `runabc.qsh` and `RunAbsolute1.R` are correct.
-2. Submit `runabc.qsh` (e.g. `sh runabc.qsh`).
-3. After completion, download the `plot.pdf` files and `*.tab.txt` results for review.
-4. Choose a solution for each sample, add a leading `solution` column to the relevant `tab.txt`, and upload back to the cluster (same filename/location).
-5. Run `Rscript RunAbsolute2.R`.
-6. Merge mutations with ABSOLUTE output using `Rscript Combine_muts_cncf.R` (set `MAF.directory`, `results.directory`, and output filename).  The merged product can be named `<project>_absolute.csv`.
-
-# Quality Checks
-- Validate deletions/amplifications in geneCN results by manual inspection.
-- Ensure every sample retains ≥1 mutation; if not, add a dummy mutation before running ABSOLUTE.
-- Version-control your edited ABSOLUTE scripts (`runabc.qsh`, `RunAbsolute*.R`) alongside project metadata.
+# Common Issues
+   - **Missing facets CN files** - ensure `make facets` completed and that the
+     `<pair>.cncf.txt` files follow the `<tumor>_<normal>` naming convention.
+   - **ABSOLUTE library unavailable** - source the R environment that contains
+     the ABSOLUTE package before launching the target or adjust `RSCRIPT`/`R_LIBS`
+     so the library is discoverable.
+   - **No reviewed table** - ABSOLUTE will not produce
+     `absolute/reviewed/all.seq.ABSOLUTE.table.txt` until
+     `all.PP-calls_tab.reviewed.txt` exists.  Copy the unreviewed file, record
+     the chosen solutions, and rerun the target.

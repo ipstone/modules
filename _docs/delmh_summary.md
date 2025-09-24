@@ -1,46 +1,37 @@
-# Name: 
+# Name:
    delmh_summary
 
 # Description
-   Caculate:
-    - tsv/delmh_found.tsv:    deletion with microhomology
-    - tsv/delmh_filtered.tsv:  filter by apropriate deletion caller filter
-    - tsv/delmh_summary.tsv:   sample level summary of deleltions/mh
-                                (focusing on del-len>=4, mh-len>=3 for now)
+   Computes deletion microhomology statistics from the curated mutation summary
+   so you can flag samples with elevated deletion-with-microhomology burdens.
+   The make target is implemented in `summary/delmh_summary.mk` and delegates the
+   heavy lifting to `summary/delmh_summary.R`.
 
-# Input
-    tsv/all.somatic_indels.tsv
+# Inputs
+   - `summary/tsv/mutation_summary.tsv` - produced by `make mutation_summary`.
+   - Reference FASTA and BSgenome assets available to R (the script loads
+     `BSgenome.Hsapiens.UCSC.hg19`).  Ensure the genome package is installed in
+     the environment used by the rule.
 
-    Required fields for input:
-          - "SAMPLE.TUMOR", "SAMPLE.NORMAL", "variantCaller" (TODO: optional, refactor code to loosen these requirements )
-          - 'CHROM', 'POS', 'REF', 'ALT' (required for detail calculation) 
-
-    The convention for the indel postion is 1 based, eg:
-      $ CHROM                 : chr  "1" "1" "1" "1" ... (X, Y etc.)
-      $ POS                   : int  821023 1130880 1501479 1773873 
-      $ REF                   : chr  "TAA" "CT" "TA" "CA" ...
-      $ ALT                   : chr  "T" "C" "T" "C" ...
-
-
-# Output
+# Outputs
 ```
-    - tsv/delmh_found.tsv:    deletion with microhomology
-    - tsv/delmh_filtered.tsv:  filter by apropriate deletion caller filter
-    - tsv/delmh_summary.tsv:   sample level summary of deleltions/mh
-                                (focusing on del-len>=4, mh-len>=3 for now)
+summary/tsv/delmh_summary.tsv
+version/delmh_summary.txt   # R version captured by the job wrapper
 ```
+   The TSV reports per-sample counts, mean/median deletion lengths, and the
+   fraction of deletions with ≥3 bp microhomology for events ≥4 bp long.
 
-# Error
-  1. This targets need to be submitted on head node; submitting from
-  cluster node can result in some temp file not read errors etc.
+# Usage
+```
+make mutation_summary
+make delmh_summary USE_CLUSTER=false
+```
+   The first command materialises the TSV inputs; the second runs the summary
+   locally (omit `USE_CLUSTER=false` to submit via qmake).
 
-  2. all.somatic_indels.tsv has different headers than the
-     mutation_summary:
-        in all.somatic_indels.tsv:
-            - SAMPLE.TUMOR => corresponds to TUMOR_SAMPLE
-            - SAMPLE.NORMAL =>      .........NORMAL_SAMPLE
-     These fields names may need to be recoded before using
-     mutation_summary as input.
-
-# Examples
-    `make delmh_summary`  # This will generate all 3 output 
+# Common Issues
+   - **Missing BSgenome library** - install
+     `Bioconductor::BSgenome.Hsapiens.UCSC.hg19` in the runtime environment if
+     the script aborts at `library("BSgenome.Hsapiens.UCSC.hg19")`.
+   - **No deletions present** - samples without qualifying deletions still
+     appear in the output with `NA` summary metrics; this is expected.

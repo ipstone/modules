@@ -1,26 +1,42 @@
-# Name: 
+# Name:
     svabaTN
 
 # Description
-    Run the svaba strucrual variant caller on tumor-normal pairs
+    Executes SvABA on each tumor/normal pair using `sv_callers/svabaTN.mk`.  The
+    pipeline wraps `svaba run`, supplying project-specific defaults for the
+    reference, dbSNP indel resource, and blacklist BED.
 
-# Input
-    tumor/normal pairs bam files.
+# Inputs
+    - `bam/<tumor>.bam`, `bam/<normal>.bam` symlinks.
+    - `SVABA` binary and reference resources configured in `config.inc`
+      (`SVABA_REF`, `SVABA_DBSNP`, `SVABA_BLACKLISTED`).
 
-# Output
-    svaba/ folder contains 
-        vcf files
+# Outputs
+```
+svaba/<pair>.svaba.somatic.indel.vcf
+svaba/<pair>.svaba.somatic.indel.vcf.idx
+svaba/<pair>.svaba.log
+svaba/<pair>.svaba.somatic.sv.vcf        # produced by SvABA but not a make target
+```
+    Additional SvABA intermediate files (.bam, .txt) are retained inside the
+    `svaba/` directory for troubleshooting.
 
-# Error
+# Usage
+```
+make svabaTN USE_CLUSTER=false   # run locally; omit to submit through qmake
+```
+    Override `SVABA_CORES` or `SVABA_MEM_CORE` on the command line if your queue
+    has different resource limits.
 
-# Post processing:
-    samples=`basename input/svaba_vcf/*.vcf`
-    for i in $samples; do
-        Rscript lib/svaba/R/svaba-annotate.R -i input/svaba_vcf/$i -g
-        hg19 > output/svaba_annotation/$i.ann.txt
-    done
+# Post-processing
+- Use `make merge_sv` / `make annotate_sv` to integrate SvABA outputs with other
+  SV callers (GRIDSS, Manta).  Those targets look under `svaba/` for VCFs ending
+  in `.svaba.somatic.indel.vcf`.
+- When manual annotation is needed, SvABA’s upstream repository provides the
+  R-based annotators referenced in the comments of `svabaTN.mk`.
 
-    Annotation R files are located in:
-        https://github.com/walaj/svaba/tree/master/R
-
-# Examples
+# Troubleshooting
+- Ensure BAMs are coordinate-sorted and indexed; SvABA fails fast if either file
+  is missing an index.
+- The blacklist (`SVABA_BLACKLISTED`) filters centromeres/telomeres; adjust if
+  working on non-human genomes.
