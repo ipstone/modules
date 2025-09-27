@@ -3,7 +3,7 @@ cluster_engine: LSF ## PBS ## SGE
 
 use_cluster: true
 
-ref: b37
+ref: hg19
 
 aligner: bwamem ## tophat ## hisat ## bwa ## bowtie ## tmap
 bam_chr1_base_recal: true
@@ -15,6 +15,8 @@ bam_no_sort: false
 bam_fix_rg: false
 bam_phred64: false
 bam_reprocess: false
+
+merge_split_bams: true
 
 snv_type: mutect # or mutect_snps
 mutect_split_chr: true
@@ -30,7 +32,7 @@ ann_provean: false
 ann_pathogen: true
 
 # target panels
-targets_file: ~/share/reference/target_panels/
+targets_file: ~/share/reference/target_panels/whole_genome_1indexed_nochr_scalpel.bed
 
 # gatk options
 gatk_hard_filter_snps: true
