@@ -607,10 +607,6 @@ TARGETS += virus_detection_bowtie2
 virus_detection_bowtie2 :
 	$(call RUN_MAKE,modules/virus/virus_detection_bowtie2.mk)
 	
-TARGETS += viral_detection
-viral_detection :
-	$(call RUN_MAKE,modules/test/workflows/viral_detection.mk)
-	
 TARGETS += krona_classify
 krona_classify :
 	$(call RUN_MAKE,modules/virus/krona_classify.mk)
@@ -674,11 +670,6 @@ ann_summary_vcf :
 # beta testing
 #==================================================
 
-TARGETS += hotspot_summary
-hotspot_summary :
-	$(MAKE) -f modules/variant_callers/genotypehotspots.mk -j $(NUM_JOBS)
-	$(call RUN_MAKE,modules/summary/hotspotsummary.mk)
-	
 TARGETS += qdnaseq_copynumber_test
 qdnaseq_copynumber_test:
 	$(call RUN_MAKE,modules/test/copy_number/qdnaseqcopynumber.mk)
@@ -703,9 +694,6 @@ TARGETS += cravat_annotation
 cravat_annotation :
 	$(call RUN_MAKE,modules/test/annotations/cravat_annotation.mk)
 
-TARGETS += cravat_summary
-cravat_summary :
-	$(call RUN_MAKE,modules/test/annotations/cravat_summary.mk)
 
 #==================================================
 # alpha testing
