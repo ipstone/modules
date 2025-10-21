@@ -9,6 +9,16 @@ import collections
 """
 
 
+def yaml_load(path):
+    """Load YAML using safest available loader (backwards compatible)."""
+    with open(path, 'r') as handle:
+        if hasattr(yaml, 'full_load'):
+            return yaml.full_load(handle)
+        if hasattr(yaml, 'safe_load'):
+            return yaml.safe_load(handle)
+        return yaml.load(handle)
+
+
 def lowerBool(x):
     if isinstance(x, bool):
         return str(x).lower()
@@ -17,9 +27,7 @@ def lowerBool(x):
 
 
 def sample_yaml2mk(samples_file, out):
-    """ convert sample yaml file to make include file
-    """
-    samples = yaml.load(open(samples_file, 'r'), Loader=yaml.SafeLoader)
+    samples = yaml_load(args.samples_file)
 
     tumors = set()
     normals = set()
@@ -96,20 +104,16 @@ def sample_yaml2mk(samples_file, out):
 
 
 def sample_attr_yaml2mk(sample_attr_file, out):
-    """ convert sample attributes yaml file to make include file
-    """
     print("\n# sample_attr_file", file=out)
-    sample_attr = yaml.load(open(sample_attr_file, 'r'), Loader=yaml.SafeLoader)
+    sample_attr = yaml_load(sample_attr_file)
     for attr, m in sample_attr.items():
         for k, v in m.items():
             print("{}.{} = {}".format(attr, k, v), file=out)
 
 
 def sample_fastq_yaml2mk(sample_fastq_file, out):
-    """ convert sample fastq yaml file to make include file
-    """
     print("\n# sample_fastq_file", file=out)
-    sample_fastq = yaml.load(open(sample_fastq_file, 'r'), Loader=yaml.SafeLoader)
+    sample_fastq = yaml_load(sample_fastq_file)
     split_samples = set()
     for k, v in sample_fastq.items():
         for idx, fastq in enumerate(v):
@@ -127,10 +131,8 @@ def sample_fastq_yaml2mk(sample_fastq_file, out):
 
 
 def sample_merge_yaml2mk(sample_merge_file, out):
-    """ convert sample merge yaml file to make include file
-    """
     print("\n# sample_merge_file", file=out)
-    sample_merge = yaml.load(open(sample_merge_file, 'r'), Loader=yaml.SafeLoader)
+    sample_merge = yaml_load(args.sample_merge_file)
     print("MERGE_SAMPLES = {}".format(" ".join(list(sample_merge.keys()))), file=out)
     for k, v in sample_merge.items():
         print("merge.{} = {}".format(k, " ".join(v)), file=out)
@@ -150,7 +152,7 @@ if __name__ == '__main__':
 
     of = open(args.out_file, 'w')
 
-    config = yaml.load(open(args.project_config_file, 'r'), Loader=yaml.SafeLoader)
+    config = yaml_load(args.project_config_file)
     for k, v in config.items():
         print("{} = {}".format(k.upper(), lowerBool(v)), file=of)
 

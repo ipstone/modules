@@ -5,7 +5,7 @@ LOGDIR ?= log/bam_metrics.$(NOW)
 PHONY += metrics
 
 COLLECT_METRICS = $(JAVA) -Xmx12G -jar $(PICARD_DIR)/CollectMultipleMetrics.jar VALIDATION_STRINGENCY=LENIENT
-COLLECT_WGS_METRICS = $(JAVA) -Xmx12G -jar $(PICARD_JAR) CollectWgsMetrics VALIDATION_STRINGENCY=LENIENT
+COLLECT_WGS_METRICS = $(JAVA) -Xmx96G -jar $(PICARD_JAR) CollectWgsMetrics VALIDATION_STRINGENCY=LENIENT
 COLLECT_GC_METRICS = $(JAVA) -Xmx12G -jar $(PICARD_DIR)/CollectGcBiasMetrics.jar VALIDATION_STRINGENCY=LENIENT
 
 SUMMARIZE_IDXSTATS = python modules/qc/summarize_idxstats.py
@@ -30,7 +30,7 @@ metrics/wgs_metrics_summary.tsv : $(foreach sample,$(SAMPLES),metrics/$(sample).
 	$(INIT) (grep GENOME_TERRITORY $< | sed 's/^/SAMPLE\t/'; for x in $(SAMPLES); do grep -A1 GENOME_TERRITORY metrics/$$x.wgs_metrics | sed 1d | sed "s/^/$$x\t/" ; done) > $@
 
 metrics/%.wgs_metrics : bam/%.bam
-	$(call RUN,-s 18G -m 24G -w 7200,"$(COLLECT_WGS_METRICS) I=$< O=$@ REFERENCE_SEQUENCE=$(REF_FASTA)")
+	$(call RUN,-s 110G -m 128G -w 7200,"$(COLLECT_WGS_METRICS) I=$< O=$@ REFERENCE_SEQUENCE=$(REF_FASTA)")
 
 metrics/%.gc_bias_metrics : bam/%.bam
 	$(call RUN,-s 18G -m 24G -w 7200,"$(COLLECT_GC_METRICS) I=$< O=$@ CHART_OUTPUT=$(addsuffix .pdf,$@) REFERENCE_SEQUENCE=$(REF_FASTA)")
