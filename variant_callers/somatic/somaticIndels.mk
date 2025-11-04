@@ -34,10 +34,12 @@ uvcf/%.uvcf : $(foreach chr,$(CHROMOSOMES),chr_uvcf/%.$(chr).uvcf)
 	$(INIT) h=`find $^ -size +1 | head -n1`; \
 		if [[ ! -z $$h ]]; then \
 		(grep -s '^#' $$h; grep -P '^CHROM\t' $$h; \
-		for x in $^; do grep -v '^#' $$x || true; done) > $@; else touch $@; fi
+		for x in $^; do grep -v '^#' $$x || true; done) > $@; \
+		if [[ -s $@ ]]; then sed -i '/^;/d' $@; fi; else touch $@; fi
 else
 uvcf/%.uvcf : vcf/%.vcf
 	$(call RUN,-s 24G -m 48G -c -w 7200,"$(UPS_INDEL) $(REF_FASTA) $< $(@D)/$*")
+	if [[ -s $@ ]]; then sed -i '/^;/d' $@; fi
 endif
 
 vcf/%.uvcf.vcf : vcf/%.vcf uvcf/%.uvcf

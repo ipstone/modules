@@ -8,9 +8,11 @@ include modules/variant_callers/gatk.inc
 LOGDIR ?= log/strelka.$(NOW)
 PHONY += strelka strelka_vcfs strelka_mafs
 
-CONFIGURE_STRELKA = $(PERL) $(HOME)/share/usr/bin/configureStrelkaWorkflow.pl
+STRELKA_ENV ?= /lila/data/riazlab/data/peix/miniconda3/envs/strelka-2.9.7
+CONFIGURE_STRELKA = $(STRELKA_ENV)/bin/configureStrelkaSomaticWorkflow.py
+STRELKA_PYTHON = $(STRELKA_ENV)/bin/python
 STRELKA_CONFIG = $(HOME)/share/usr/etc/strelka_config.ini
-STRELKA_SOURCE_ANN_VCF = python modules/vcf_tools/annotate_source_vcf.py --source strelka
+STRELKA_SOURCE_ANN_VCF = $(STRELKA_PYTHON) modules/vcf_tools/annotate_source_vcf.py --source strelka
 
 strelka : strelka_vcfs #strelka_mafs
 	
@@ -19,11 +21,11 @@ strelka_vcfs : $(foreach type,$(STRELKA_VARIANT_TYPES),$(foreach pair,$(SAMPLE_P
 strelka_mafs : $(foreach type,$(STRELKA_VARIANT_TYPES),$(foreach pair,$(SAMPLE_PAIRS),maf/$(pair).$(type).maf))
 
 define strelka-tumor-normal
-strelka/$1_$2/Makefile : bam/$1.bam bam/$2.bam
-	$$(call RUN,-N strelka_$1_$2,"rm -rf $$(@D) && $$(CONFIGURE_STRELKA) --tumor=$$< --normal=$$(<<) --ref=$$(REF_FASTA) --config=$$(STRELKA_CONFIG) --output-dir=$$(@D)")
+strelka/$1_$2/runWorkflow.py : bam/$1.bam bam/$2.bam
+	$$(call RUN,-N strelka_$1_$2,"rm -rf $$(@D) && $$(STRELKA_PYTHON) $$(CONFIGURE_STRELKA) --tumorBam=$$< --normalBam=$$(<<) --referenceFasta=$$(REF_FASTA) --config=$$(STRELKA_CONFIG) --runDir=$$(@D)")
 
-strelka/$1_$2/task.complete : strelka/$1_$2/Makefile
-	$$(call RUN,-N $1_$2.strelka -n 10 -s 2G -m 3G -w 7200,"make -j 10 -C $$(<D)")
+strelka/$1_$2/task.complete : strelka/$1_$2/runWorkflow.py
+	$$(call RUN,-N $1_$2.strelka -n 10 -s 40G -m 48G -w 7200,"cd $$(<D) && $$(STRELKA_PYTHON) runWorkflow.py -m local -j 10 && touch task.complete")
 
 strelka/vcf/$1_$2.%.vcf.tmp : strelka/vcf/$1_$2.%.vcf
 	$$(call RUN,-s 4G -m 8G -w 7200,"$$(RSCRIPT) modules/scripts/swapvcf.R --file $$< --tumor $1 --normal $2")
@@ -32,10 +34,10 @@ vcf/$1_$2.%.vcf : strelka/vcf/$1_$2.%.vcf.tmp
 	$$(INIT) perl -ne 'if (/^#CHROM/) { s/NORMAL/$2/; s/TUMOR/$1/; } print;' $$< > $$@ && $$(RM) $$<
 	
 strelka/vcf/$1_$2.strelka_snps.vcf : strelka/$1_$2/task.complete
-	$$(INIT) $$(STRELKA_SOURCE_ANN_VCF) < strelka/$1_$2/results/all.somatic.snvs.vcf > $$@
+	$$(INIT) zcat strelka/$1_$2/results/variants/somatic.snvs.vcf.gz | $$(STRELKA_SOURCE_ANN_VCF) > $$@
 
 strelka/vcf/$1_$2.strelka_indels.vcf : strelka/$1_$2/task.complete
-	$$(INIT) $$(STRELKA_SOURCE_ANN_VCF) < strelka/$1_$2/results/all.somatic.indels.vcf > $$@
+	$$(INIT) zcat strelka/$1_$2/results/variants/somatic.indels.vcf.gz | $$(STRELKA_SOURCE_ANN_VCF) > $$@
 
 endef
 $(foreach pair,$(SAMPLE_PAIRS),$(eval $(call strelka-tumor-normal,$(tumor.$(pair)),$(normal.$(pair)))))
