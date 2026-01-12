@@ -43,3 +43,9 @@ make bam_metrics USE_CLUSTER=false
   concatenates sample-level metrics into a single TSV for review.
 - The GC bias recipe emits both `*.gc_metrics.txt` (per-sample values) and a
   project-wide `summary/gc_summary.txt` table.
+
+## Comparison with wgs_metrics
+- `wgs_metrics` is designed for whole-genome sequencing data with key differences:
+  - Includes WGS coverage and duplicate metrics (no hybrid selection metrics)
+  - Uses extended walltime for WGS processing
+  - Lower insert size threshold (0.05 vs 0.5) for WGS data
