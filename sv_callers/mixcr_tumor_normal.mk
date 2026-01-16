@@ -2,9 +2,10 @@ include modules/Makefile.inc
 
 LOGDIR = log/mixcr_tumor_normal.$(NOW)
 
-mixcr : $(foreach sample,$(SAMPLES),mixcr/$(sample)/$(sample).1.fastq.gz)
+mixcr : $(foreach sample,$(SAMPLES),mixcr/$(sample)/$(sample).1.fastq.gz) \
+	$(foreach sample,$(SAMPLES),mixcr/$(sample)/alignments.vdjca)
 
-define mixcr-tumor-normal
+define extract-fastq
 mixcr/$1/$1.1.fastq : bam/$1.bam
 	$$(call RUN,-n 4 -s 4G -m 9G,"set -o pipefail && \
 				      mkdir -p mixcr/$1 && \
@@ -15,8 +16,23 @@ mixcr/$1/$1.1.fastq.gz : mixcr/$1/$1.1.fastq
 	$$(call RUN,-n 4 -s 4G -m 9G,"set -o pipefail && \
 				      gzip mixcr/$1/$1.1.fastq && \
 				      gzip mixcr/$1/$1.2.fastq")
+				      
+endef
+$(foreach sample,$(SAMPLES),\
+		$(eval $(call extract-fastq,$(sample))))
 
 
+define mixcr-tumor-normal
+mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
+	$$(call RUN,-n 4 -s 4G -m 9G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
+								  mixcr align \
+								  --species hsa \
+								  --preset rna-seq \
+								  --starting-material dna \
+								  --threads 4 \
+								  --verbose \
+								  mixcr/$1/$1.1.fastq.gz mixcr/$1/$1.2.fastq.gz \
+								  $$(@)")
 
 endef
 $(foreach sample,$(SAMPLES),\
