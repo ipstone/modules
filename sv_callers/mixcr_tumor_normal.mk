@@ -24,12 +24,12 @@ $(foreach sample,$(SAMPLES),\
 
 define mixcr-tumor-normal
 mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
-	$$(call RUN,-n 4 -s 4G -m 9G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
+	$$(call RUN,-n 8 -s 2G -m 4G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
 								  mixcr align \
 								  --species hsa \
 								  --preset rna-seq \
-								  --starting-material dna \
-								  --threads 4 \
+								  --dna \
+								  --threads 8 \
 								  --verbose \
 								  mixcr/$1/$1.1.fastq.gz mixcr/$1/$1.2.fastq.gz \
 								  $$(@)")
