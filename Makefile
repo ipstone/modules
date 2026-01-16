@@ -582,7 +582,7 @@ medicc2 :
 
 TARGETS += mixcr
 mixcr :
-	$(call RUN_MAKE,modules/sv_callers/mixcr_tumor_only.mk)
+	$(call RUN_MAKE,modules/sv_callers/mixcr_tumor_normal.mk)
 
 #==================================================
 # reports
