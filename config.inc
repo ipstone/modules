@@ -44,6 +44,7 @@ POLYSOLVER_ENV = $(HOME)/share/usr/anaconda-envs/hla-polysolver
 MSISENSOR_ENV = $(HOME)/share/usr/anaconda-envs/msisensor
 MIMSI_ENV = $(HOME)/share/usr/env/mimsi-0.4.4
 QDNASEQ_ENV = $(HOME)/share/usr/env/r-qdnaseq-1.42.0
+MIXCR_ENV = $(HOME)/share/usr/env/mixcr-4.7.0
 
 JARDIR ?= $(HOME)/share/usr/lib/java
 
