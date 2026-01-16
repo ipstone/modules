@@ -24,7 +24,7 @@ $(foreach sample,$(SAMPLES),\
 
 define mixcr-tumor-normal
 mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
-	$$(call RUN,-n 8 -s 2G -m 4G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
+	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
 								  mixcr align \
 								  --species hsa \
 								  --preset rna-seq \
