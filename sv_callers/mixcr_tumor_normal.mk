@@ -58,17 +58,17 @@ mixcr/$1/alignments_rescued_2_extended.vdjca : mixcr/$1/alignments_rescued_2.vdj
 								  $$(@)")
 
 mixcr/$1/clones.clns : mixcr/$1/alignments_rescued_2_extended.vdjca
-	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
-								  mixcr assemble \
-								  -O badQualityThreshold=0 \
-								  $$(<) \
-								  $$(@)")
+	$$(call RUN,-n 8 -s 2G -m 4G -v $(MIXCR_ENV),"set -o pipefail && \
+						      mixcr assemble \
+						      -O badQualityThreshold=0 \
+						      $$(<) \
+						      $$(@)")
 								  
 mixcr/$1/clones.tsv : mixcr/$1/clones.clns
-	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
-								  mixcr exportClones \
-								  $$(<) \
-								  $$(@)")
+	$$(call RUN,-n 8 -s 2G -m 4G -v $(MIXCR_ENV),"set -o pipefail && \
+						      mixcr exportClones \
+						      $$(<) \
+						      $$(@)")
 								  
 endef
 $(foreach sample,$(SAMPLES),\
