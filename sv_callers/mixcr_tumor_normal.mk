@@ -34,6 +34,7 @@ mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
 								  --species hsa \
 								  --preset rna-seq \
 								  --dna \
+								  -OallowPartialAlignments=true \
 								  --threads 8 \
 								  --verbose \
 								  mixcr/$1/$1.1.fastq.gz mixcr/$1/$1.2.fastq.gz \
@@ -42,12 +43,16 @@ mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
 mixcr/$1/alignments_rescued_1.vdjca : mixcr/$1/alignments.vdjca
 	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
 								  mixcr assemblePartial \
+								  -OminimalVJJunctionOverlap=15 \
+								  -OmergerParameters.minimalOverlap=10 \
 								  $$(<) \
 								  $$(@)")
 								  
 mixcr/$1/alignments_rescued_2.vdjca : mixcr/$1/alignments_rescued_1.vdjca
 	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
 								  mixcr assemblePartial \
+								  -OminimalVJJunctionOverlap=10 \
+								  -OmergerParameters.minimalOverlap=8 \
 								  $$(<) \
 								  $$(@)")
 								  
@@ -61,6 +66,8 @@ mixcr/$1/clones.clns : mixcr/$1/alignments_rescued_2_extended.vdjca
 	$$(call RUN,-n 8 -s 2G -m 4G -v $(MIXCR_ENV),"set -o pipefail && \
 						      mixcr assemble \
 						      -O badQualityThreshold=0 \
+						      -O minimalVSegmentLength=15 \
+						      -O minimalJSegmentLength=10 \
 						      $$(<) \
 						      $$(@)")
 								  
