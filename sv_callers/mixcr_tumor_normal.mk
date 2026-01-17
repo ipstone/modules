@@ -5,6 +5,7 @@ LOGDIR = log/mixcr_tumor_normal.$(NOW)
 mixcr : $(foreach sample,$(SAMPLES),mixcr/$(sample)/$(sample).1.fastq.gz) \
 	$(foreach sample,$(SAMPLES),mixcr/$(sample)/alignments.vdjca) \
 	$(foreach sample,$(SAMPLES),mixcr/$(sample)/alignments_rescued_1.vdjca) \
+	$(foreach sample,$(SAMPLES),mixcr/$(sample)/alignments_rescued_2.vdjca)
 
 define extract-fastq
 mixcr/$1/$1.1.fastq : bam/$1.bam
@@ -36,6 +37,12 @@ mixcr/$1/alignments.vdjca : mixcr/$1/$1.1.fastq.gz
 								  $$(@)")
 
 mixcr/$1/alignments_rescued_1.vdjca : mixcr/$1/alignments.vdjca
+	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
+								  mixcr assemblePartial \
+								  $$(<) \
+								  $$(@)")
+								  
+mixcr/$1/alignments_rescued_2.vdjca : mixcr/$1/alignments_rescued_1.vdjca
 	$$(call RUN,-n 8 -s 4G -m 6G -v $(MIXCR_ENV) -w 24:00:00,"set -o pipefail && \
 								  mixcr assemblePartial \
 								  $$(<) \
