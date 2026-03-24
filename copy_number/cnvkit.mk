@@ -18,8 +18,8 @@ cnv_kit : $(foreach sample,$(TUMOR_SAMPLES),cnvkit/cnn/tumor/$(sample).targetcov
 	  cnvkit/summary/total_copy.txt \
 	  cnvkit/summary/log2_ratio.txt
 	  
-ONTARGET_FILE = $(HOME)/share/lib/bed_files/MSK-IMPACT-v3_cnvkit_ontarget.bed
-OFFTARGET_FILE = $(HOME)/share/lib/bed_files/MSK-IMPACT-v4_cnvkit_offtarget.bed
+ONTARGET_FILE = $(HOME)/share/lib/bed_files/IMPACT505_b37_CNVkit_on-target.bed
+OFFTARGET_FILE = $(HOME)/share/lib/bed_files/IMPACT505_b37_CNVkit_off-target.bed
 
 define cnvkit-tumor-cnn
 cnvkit/cnn/tumor/$1.targetcoverage.cnn : bam/$1.bam
