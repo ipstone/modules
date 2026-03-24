@@ -28,7 +28,7 @@ facets_suite/$1_$2/$1_$2.snp_pileup.gz : facets_suite/targets_dbsnp.vcf bam/$1.b
 							   --tumor-bam $$(<<) \
 							   --normal-bam $$(<<<) \
 							   --output-prefix facets_suite/$1_$2/$1_$2 \
-							   --pseudo-snps 50 \
+							   --pseudo-snps NULL \
 							   --max-depth $$(FACETS_MAX_DEPTH)")
 	
 endef
