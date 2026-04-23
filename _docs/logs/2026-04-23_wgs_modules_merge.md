@@ -187,8 +187,8 @@ This file received the most extensive overhaul, combining improvements from both
 - `wgs_metrics` target now points to `modules/wgs_metrics.mk` (root-level) instead of `modules/qc/wgs_metrics.mk`.  
   *Rationale*: the root-level `wgs_metrics.mk` is the actively maintained, parameterized version.
 - Added `SVABA_NUM_ATTEMPTS ?= 1` and set `NUM_ATTEMPTS` for the `svaba_tumor_normal` target. Supports automatic retry.
-- Removed obsolete `svabaTN` target (superseded by `svaba_tumor_normal`).
-- Moved `hotspot_summary` and `viral_detection` back to the beta-testing section (they were removed in jrflab branches but are ipstone-specific).
+- The active top-level SvABA target is now `svaba_tumor_normal`. The legacy `svabaTN` module file remains in the repository for historical reference, but it is not wired into the current top-level `Makefile`.
+- Kept ipstone-specific `hotspot_summary` and `viral_detection` targets in the top-level `Makefile` instead of dropping them during the WGS merge.
 
 ---
 

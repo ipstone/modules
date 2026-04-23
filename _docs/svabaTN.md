@@ -1,14 +1,23 @@
-# Name:
-    svabaTN
+# Name: svabaTN (legacy)
 
 # Description
-    Executes SvABA on each tumor/normal pair using `sv_callers/svabaTN.mk`.  The
-    pipeline wraps `svaba run`, supplying project-specific defaults for the
-    reference, dbSNP indel resource, and blacklist BED.
+    Legacy SvABA wrapper implemented in `sv_callers/svabaTN.mk`.
+    This target is **not exposed in the current top-level `Makefile`** and is
+    kept mainly for historical reference / older projects that may still point
+    at the legacy module file directly.
+
+    For current WGS structural-variant calling, use:
+
+```
+make svaba_tumor_normal
+```
+
+    The active workflow is implemented in `sv_callers/svaba_tumor_normal.mk`
+    and is the version documented for the merged WGS pipeline.
 
 # Inputs
     - `bam/<tumor>.bam`, `bam/<normal>.bam` symlinks.
-    - `SVABA` binary and reference resources configured in `config.inc`
+    - Legacy SvABA resources configured by `sv_callers/svabaTN.mk`
       (`SVABA_REF`, `SVABA_DBSNP`, `SVABA_BLACKLISTED`).
 
 # Outputs
@@ -16,27 +25,25 @@
 svaba/<pair>.svaba.somatic.indel.vcf
 svaba/<pair>.svaba.somatic.indel.vcf.idx
 svaba/<pair>.svaba.log
-svaba/<pair>.svaba.somatic.sv.vcf        # produced by SvABA but not a make target
+svaba/<pair>.svaba.somatic.sv.vcf        # SvABA also produces an SV VCF
 ```
-    Additional SvABA intermediate files (.bam, .txt) are retained inside the
-    `svaba/` directory for troubleshooting.
 
-# Usage
+# Current recommendation
+- Prefer `make svaba_tumor_normal` for current WGS work.
+- Prefer `vcf/<pair>.svaba_sv.vcf` from the active workflow when integrating
+  with `make merge_sv`.
+
+# Legacy usage
+If you intentionally need the historical module behavior, invoke the module
+makefile directly:
+
 ```
-make svabaTN USE_CLUSTER=false   # run locally; omit to submit through qmake
+make -f modules/sv_callers/svabaTN.mk svabaTN USE_CLUSTER=false
 ```
-    Override `SVABA_CORES` or `SVABA_MEM_CORE` on the command line if your queue
-    has different resource limits.
 
-# Post-processing
-- Use `make merge_sv` / `make annotate_sv` to integrate SvABA outputs with other
-  SV callers (GRIDSS, Manta).  Those targets look under `svaba/` for VCFs ending
-  in `.svaba.somatic.indel.vcf`.
-- When manual annotation is needed, SvABA’s upstream repository provides the
-  R-based annotators referenced in the comments of `svabaTN.mk`.
-
-# Troubleshooting
-- Ensure BAMs are coordinate-sorted and indexed; SvABA fails fast if either file
-  is missing an index.
-- The blacklist (`SVABA_BLACKLISTED`) filters centromeres/telomeres; adjust if
-  working on non-human genomes.
+# Notes
+- This legacy module uses older hardcoded defaults and predates the queue-aware,
+  parameterized WGS settings added in `svaba_tumor_normal.mk`.
+- The blacklist variable name here is `SVABA_BLACKLISTED`; the current workflow
+  uses `SVABA_BLACKLIST`.
+- If you are unsure which SvABA workflow to use, use `svaba_tumor_normal`.
