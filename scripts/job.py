@@ -101,6 +101,38 @@ class Job:
             if self._kill_now:
                 return 0
 
+    def _check_alignment_integrity(self, max_retry=3):
+        """For BAM/CRAM outputs, run quick integrity checks."""
+        if self.out_file is None:
+            return True
+
+        lower = self.out_file.lower()
+        if not (lower.endswith('.bam') or lower.endswith('.cram')):
+            return True
+
+        out_path = os.path.abspath(self.out_file)
+        for attempt in range(max_retry):
+            try:
+                subprocess.check_output(
+                    'samtools quickcheck "{}"'.format(out_path),
+                    stderr=DEVNULL,
+                    shell=True)
+                return True
+            except subprocess.CalledProcessError as e:
+                # If samtools is not available, preserve previous behavior.
+                if e.returncode == 127:
+                    sys.stderr.write("samtools not found; skipping BAM integrity check\n")
+                    return True
+                sys.stderr.write("samtools quickcheck failed for {}\n".format(out_path))
+                time.sleep(5)
+            except:
+                sys.stderr.write("failed to run samtools quickcheck for {}\n".format(out_path))
+                time.sleep(5)
+
+            if self._kill_now:
+                return False
+        return False
+
 
 class LocalJob(Job):
 
@@ -135,8 +167,9 @@ class LocalJob(Job):
         local_file_size = super(LocalJob, self)._local_check_file(max_retry)
         if local_file_size == 0:
             return False
-        else:
-            return True
+        if not super(LocalJob, self)._check_alignment_integrity():
+            return False
+        return True
 
 
 class ClusterJob(Job):

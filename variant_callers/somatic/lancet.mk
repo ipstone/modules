@@ -16,7 +16,7 @@ LANCET = export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(LANCET_DIR)/bamtools-2.3.0/
 	$(LANCET_DIR)/lancet
 
 LANCET_THREADS = 8
-LANCET_RUN_OPTS = -c -n $(LANCET_THREADS) -s 4G -m 6G -w 36:00:00
+LANCET_RUN_OPTS = -c -n $(LANCET_THREADS) -s 4G -m 6G -w 144:00:00
 LANCET_OPTS = --ref $(REF_FASTA) --cov-thr $(LANCET_MIN_COV) --num-threads $(LANCET_THREADS)
 
 LANCET_SOURCE_ANN_VCF = python modules/vcf_tools/annotate_source_vcf.py --source lancet
@@ -74,10 +74,10 @@ $(foreach chr,$(CHROMOSOMES), \
 
 define lancet-tumor-normal
 lancet/vcf/$1_$2.lancet_snps.vcf : $$(foreach chr,$$(CHROMOSOMES),lancet/chr_vcf/$1_$2.lancet.$$(chr).vcf)
-	$$(call RUN,-s 4G -m 8G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-s 8G -m 16G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(SNP_FILTER_VCF) > $$@.tmp && $$(call VERIFY_VCF,$$@.tmp,$$@)")
 lancet/vcf/$1_$2.lancet_indels.vcf : $$(foreach chr,$$(CHROMOSOMES),lancet/chr_vcf/$1_$2.lancet.$$(chr).vcf)
-	$$(call RUN,-s 4G -m 8G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-s 8G -m 16G,"(grep '^#' $$<; cat $$^ | grep -v '^#' | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(INDEL_FILTER_VCF) > $$@.tmp && $$(call VERIFY_VCF,$$@.tmp,$$@)")
 endef
 $(foreach pair,$(SAMPLE_PAIRS),\

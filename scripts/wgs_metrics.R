@@ -5,6 +5,27 @@ suppressPackageStartupMessages(library("readr"))
 suppressPackageStartupMessages(library("dplyr"))
 suppressPackageStartupMessages(library("magrittr"))
 
+select_existing = function(data, cols) {
+    existing_cols = setdiff(colnames(data), cols)
+    dplyr::select(data, dplyr::all_of(existing_cols))
+}
+
+combine_metrics = function(metrics) {
+    all_cols = unique(unlist(lapply(metrics, colnames), use.names = FALSE))
+    if (!"SAMPLE_NAME" %in% all_cols) {
+        all_cols = c(all_cols, "SAMPLE_NAME")
+    }
+    sample_col = which(all_cols == "SAMPLE_NAME")
+    all_cols = c(all_cols[-sample_col], "SAMPLE_NAME")
+    dplyr::bind_rows(lapply(metrics, function(metric) {
+        missing_cols = setdiff(all_cols, colnames(metric))
+        for (col in missing_cols) {
+            metric[[col]] = NA
+        }
+        metric[, all_cols, drop = FALSE]
+    }))
+}
+
 if (!interactive()) {
     options(warn = -1, error = quote({ traceback(); q('no', status = 1) }))
 }
@@ -21,15 +42,15 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".idx_stats.txt"),
 					       col_names = FALSE, col_types = cols(.default = col_character()))[-85,,drop=FALSE] %>%
-			       readr::type_convert() %>%
-			       dplyr::select(CHROMOSOME = X1,
+				       readr::type_convert() %>%
+				       dplyr::select(CHROMOSOME = X1,
 					     LENGTH = X2,
 					     ALIGNED_READS = X3) %>%
-			       dplyr::mutate(CHROMOSOME = gsub(pattern=" length=", replacement="", x=CHROMOSOME),
+				       dplyr::mutate(CHROMOSOME = gsub(pattern=" length=", replacement="", x=CHROMOSOME),
 					     ALIGNED_READS = gsub(pattern="Aligned= ", replacement="", x=ALIGNED_READS),
 					     SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/idx_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 	
 } else if (as.numeric(opt$option)==2) {
@@ -38,11 +59,11 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".aln_metrics.txt"),
 					       skip = 6, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::select(-SAMPLE, -READ_GROUP) %>%
-			       dplyr::mutate(SAMPLE_NAME = sample_names[i])
+				       readr::type_convert() %>%
+				       select_existing(c("SAMPLE", "READ_GROUP")) %>%
+				       dplyr::mutate(SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/aln_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 } else if (as.numeric(opt$option)==3) {
@@ -51,11 +72,11 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".insert_metrics.txt"),
 					       skip = 6, n_max = 1, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::select(-SAMPLE, -READ_GROUP) %>%
-			       dplyr::mutate(SAMPLE_NAME = sample_names[i])
+				       readr::type_convert() %>%
+				       select_existing(c("SAMPLE", "READ_GROUP")) %>%
+				       dplyr::mutate(SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/insert_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 } else if (as.numeric(opt$option)==4) {
@@ -64,10 +85,10 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".oxog_metrics.txt"),
 					  skip = 6, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::rename(SAMPLE_NAME = SAMPLE_ALIAS)
+				       readr::type_convert() %>%
+				       dplyr::rename(SAMPLE_NAME = SAMPLE_ALIAS)
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/oxog_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 } else if (as.numeric(opt$option)==5) {
@@ -76,10 +97,10 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".gc_metrics.txt"),
 					       skip = 6, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::mutate(SAMPLE_NAME = sample_names[i])
+				       readr::type_convert() %>%
+				       dplyr::mutate(SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/gc_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 } else if (as.numeric(opt$option)==6) {
@@ -88,10 +109,10 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".wgs_metrics.txt"),
 					       skip = 6, n_max = 1, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::mutate(SAMPLE_NAME = sample_names[i])
+				       readr::type_convert() %>%
+				       dplyr::mutate(SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/wgs_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 } else if (as.numeric(opt$option)==7) {
@@ -100,10 +121,10 @@ if (as.numeric(opt$option)==1) {
 	for (i in 1:length(sample_names)) {
 		metrics[[i]] = readr::read_tsv(file = paste0("metrics/", sample_names[i], ".duplicate_metrics.txt"),
 					       skip = 6, n_max = 1, col_names = TRUE, col_types = cols(.default = col_character())) %>%
-			       readr::type_convert() %>%
-			       dplyr::mutate(SAMPLE_NAME = sample_names[i])
+				       readr::type_convert() %>%
+				       dplyr::mutate(SAMPLE_NAME = sample_names[i])
 	}
-	metrics = do.call(rbind, metrics)
+	metrics = combine_metrics(metrics)
 	write_tsv(metrics, path="summary/duplicate_metrics.txt", na = "NA", append = FALSE, col_names = TRUE)
 
 }

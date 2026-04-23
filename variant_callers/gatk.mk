@@ -1,6 +1,9 @@
 # GATK_HARD_FILTER_SNPS = true/false (default: true)
 # GATK_POOL_SNP_RECAL = true/false (default: false)
 # SPLIT_CHR = true/false (default: true)
+# GATK_SPLIT_INTERVALS = true/false (default: true)
+# GATK_INTERVAL_SIZE = interval width in bp when GATK_SPLIT_INTERVALS=true (default: 25000000)
+# GATK_HC_WALLTIME = walltime for HaplotypeCaller jobs (default: 72:00:00)
 
 ifndef GATK_MK
 
@@ -14,6 +17,9 @@ LOGDIR ?= log/gatk.$(NOW)
 GATK_HARD_FILTER_SNPS ?= true
 GATK_POOL_SNP_RECAL ?= false
 SPLIT_CHR ?= true
+GATK_SPLIT_INTERVALS ?= true
+GATK_INTERVAL_SIZE ?= 25000000
+GATK_HC_WALLTIME ?= 72:00:00
 
 VARIANT_EVAL_GATK_REPORT = $(RSCRIPT) modules/variant_callers/variantEvalGatkReport.R
 
@@ -63,7 +69,7 @@ ifeq ($(SPLIT_CHR),true)
 ifdef SAMPLE_SET_PAIRS
 define hapcall-vcf-sets-chr
 gatk/chr_vcf/$1.$2.variants.vcf : $$(foreach sample,$$(samples.$1),gatk/chr_vcf/$$(sample).$2.variants.intervals) $$(foreach sample,$$(samples.$1),bam/$$(sample).bam bam/$$(sample).bai)
-	$$(call RUN,-c -s 9G -m 12G -w 72:00:00,"$$(call GATK_MEM,8G) -T HaplotypeCaller $$(HAPLOTYPE_CALLER_OPTS) \
+	$$(call RUN,-c -s 9G -m 12G -w $$(GATK_HC_WALLTIME),"$$(call GATK_MEM,8G) -T HaplotypeCaller $$(HAPLOTYPE_CALLER_OPTS) \
 		$$(foreach bam,$$(filter %.bam,$$^),-I $$(bam) ) $$(foreach intervals,$$(filter %.intervals,$$^),-L $$(intervals) ) -o $$@")
 endef
 $(foreach chr,$(CHROMOSOMES),$(foreach set,$(SAMPLE_SET_PAIRS),$(eval $(call hapcall-vcf-sets-chr,$(set),$(chr)))))
@@ -76,13 +82,38 @@ endef
 $(foreach set,$(SAMPLE_SET_PAIRS),$(eval $(call merge-chr-variants-sets,$(set))))
 endif # def SAMPLE_SETS
 
+ifeq ($(GATK_SPLIT_INTERVALS),true)
+
+# Split large chromosomes into fixed-width windows so tumor HaplotypeCaller jobs
+# stay well below the cluster walltime and finish sooner.
+$(foreach chr,$(CHROMOSOMES),$(eval GATK_CHR_PARTS.$(chr) := $(shell awk -v chr='$(chr)' -v size=$(GATK_INTERVAL_SIZE) '$$1 == chr { for (i = 1; i <= $$2; i += size) { ++n; printf "%d ", n } }' $(REF_FASTA).fai)))
+$(foreach chr,$(CHROMOSOMES),$(foreach part,$(GATK_CHR_PARTS.$(chr)),$(eval GATK_INTERVAL.$(chr).$(part) := $(shell awk -v chr='$(chr)' -v size=$(GATK_INTERVAL_SIZE) -v part=$(part) '$$1 == chr { start = ((part - 1) * size) + 1; end = part * size; if (end > $$2) end = $$2; printf "%s:%d-%d", chr, start, end }' $(REF_FASTA).fai))))
+
+define chr-variants-part
+gatk/chr_vcf/%.$1.part$2.variants.vcf : bam/%.bam bam/%.bai
+	$$(call RUN,-s 8G -m 12G -w $$(GATK_HC_WALLTIME),"$$(call GATK_MEM,8G) -T HaplotypeCaller \
+		-L $$(GATK_INTERVAL.$1.$2) -I $$< -o $$@ \
+		$$(HAPLOTYPE_CALLER_OPTS)")
+endef
+$(foreach chr,$(CHROMOSOMES),$(foreach part,$(GATK_CHR_PARTS.$(chr)),$(eval $(call chr-variants-part,$(chr),$(part)))))
+
+define merge-chr-variants-parts
+gatk/chr_vcf/%.$1.variants.vcf : $$(foreach part,$$(GATK_CHR_PARTS.$1),gatk/chr_vcf/%.$1.part$$(part).variants.vcf)
+	$$(call RUN,-s 4G -m 6G -c,"$$(call GATK_MEM,3G) -T CombineVariants --assumeIdenticalSamples $$(foreach i,$$^, --variant $$i) -R $$(REF_FASTA) -o $$@")
+endef
+$(foreach chr,$(CHROMOSOMES),$(eval $(call merge-chr-variants-parts,$(chr))))
+
+else
+
 define chr-variants
 gatk/chr_vcf/%.$1.variants.vcf : bam/%.bam bam/%.bai
-	$$(call RUN,-s 8G -m 12G -w 72:00:00,"$$(call GATK_MEM,8G) -T HaplotypeCaller \
+	$$(call RUN,-s 8G -m 12G -w $$(GATK_HC_WALLTIME),"$$(call GATK_MEM,8G) -T HaplotypeCaller \
 	-L $1 -I $$< -o $$@ \
 	$$(HAPLOTYPE_CALLER_OPTS)")
 endef
 $(foreach chr,$(CHROMOSOMES),$(eval $(call chr-variants,$(chr))))
+
+endif
 
 define merge-chr-variants
 gatk/vcf/$1.variants.vcf : $$(foreach chr,$$(CHROMOSOMES),gatk/chr_vcf/$1.$$(chr).variants.vcf)
@@ -96,14 +127,14 @@ else #### no splitting by chr ####
 ifdef SAMPLE_SETS
 define hapcall-vcf-sets
 gatk/vcf/$1.variants.vcf : $$(foreach sample,$$(samples.$1),gatk/vcf/$$(sample).variants.vcf) $$(foreach sample,$$(samples.$1),bam/$$(sample).bam bam/$$(sample).bai)
-	$$(call RUN,-s 9G -m 12G -c,"$$(call GATK_MEM,8G) -T HaplotypeCaller -R $$(REF_FASTA) --dbsnp $$(DBSNP) $$(foreach bam,$$(filter %.bam,$$^),-I $$(bam) ) $$(foreach vcf,$$(filter %.vcf,$$^),-L $$(vcf) ) -o $$@")
+	$$(call RUN,-s 9G -m 12G -c -w $$(GATK_HC_WALLTIME),"$$(call GATK_MEM,8G) -T HaplotypeCaller -R $$(REF_FASTA) --dbsnp $$(DBSNP) $$(foreach bam,$$(filter %.bam,$$^),-I $$(bam) ) $$(foreach vcf,$$(filter %.vcf,$$^),-L $$(vcf) ) -o $$@")
 endef
 $(foreach set,$(SAMPLE_SET_PAIRS),$(eval $(call hapcall-vcf-sets,$(set))))
 endif
 
 define hapcall-vcf
 gatk/vcf/$1.variants.vcf : bam/$1.bam bam/$1.bai
-	$$(call RUN,-s 8G -m 12G -c,"$$(call GATK_MEM,8G) -T HaplotypeCaller \
+	$$(call RUN,-s 8G -m 12G -c -w $$(GATK_HC_WALLTIME),"$$(call GATK_MEM,8G) -T HaplotypeCaller \
 	-I $$< --dbsnp $$(DBSNP) -o $$@  -rf BadCigar \
 	-stand_call_conf $$(VARIANT_CALL_THRESHOLD) -stand_emit_conf $$(VARIANT_EMIT_THRESHOLD) -R $$(REF_FASTA)")
 endef

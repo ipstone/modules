@@ -15,7 +15,7 @@ MERGE_UVCF_VCF = python modules/vcf_tools/merge_uvcf_vcf.py
 MERGE_INDEL_VCF = python modules/vcf_tools/merge_indel_vcf.py
 
 vcf/%.somatic_indels.vcf : $(foreach type,$(INDEL_TYPES),vcf/%.$(type).uvcf.vcf)
-	$(call RUN,-s 9G -m 12G -c,"$(MERGE_INDEL_VCF) $^ | $(VCF_SORT) $(REF_DICT) - > $@.tmp && $(call VERIFY_VCF,$@.tmp,$@)")
+	$(call RUN,-s 16G -m 24G -c,"$(MERGE_INDEL_VCF) $^ | $(VCF_SORT) $(REF_DICT) - > $@.tmp && $(call VERIFY_VCF,$@.tmp,$@)")
 
 ifeq ($(UPS_SPLIT_CHR),true)
 chr_vcf/%.chr_timestamp : vcf/%.vcf

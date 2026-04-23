@@ -50,7 +50,7 @@ $(foreach i,$(SCALPEL_CHUNKS),$(eval $(call scalpel-interval-chunk,$i)))
 
 define scalpel-chunk-tumor-normal
 scalpel/$2_$3/$1/main/somatic.indel.vcf : scalpel/interval_chunk/chunk$1.bed bam/$2.bam bam/$3.bam
-	$$(call RUN,-N $2_$3_$1_scalpel -c -n 16 -s 8G -m 10G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 16 --tumor $$(<<) --normal $$(<<<) $$(SCALPEL_OPTS) --bed $$(<) --dir $$(@D)/..")
+	$$(call RUN,-N $2_$3_$1_scalpel -c -n 16 -s 5G -m 6G -w 7200,"$$(SCALPEL_DISCOVERY) --somatic --numprocs 16 --tumor $$(<<) --normal $$(<<<) $$(SCALPEL_OPTS) --bed $$(<) --dir $$(@D)/..")
 endef
 $(foreach chunk,$(SCALPEL_CHUNKS), \
 	$(foreach pair,$(SAMPLE_PAIRS),\

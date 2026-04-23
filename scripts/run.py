@@ -11,6 +11,41 @@ import math
 import re
 
 
+def _failed_output_paths(out_file):
+    """Return output paths that should be removed after a failed run."""
+    paths = [out_file]
+
+    # Common BAM sidecars and aliases used in this pipeline.
+    if out_file.endswith('.bam'):
+        paths.append(out_file + '.bai')
+        paths.append(out_file[:-4] + '.bai')
+    elif out_file.endswith('.bam.bai'):
+        paths.append(out_file[:-8] + '.bai')
+    elif out_file.endswith('.vcf.gz'):
+        paths.append(out_file + '.tbi')
+    elif out_file.endswith('.vcf'):
+        paths.append(out_file + '.idx')
+
+    # De-duplicate while preserving order.
+    unique_paths = []
+    seen = set()
+    for path in paths:
+        if path not in seen:
+            unique_paths.append(path)
+            seen.add(path)
+    return unique_paths
+
+
+def _cleanup_failed_outputs(out_file):
+    for path in _failed_output_paths(out_file):
+        try:
+            os.remove(path)
+            sys.stderr.write("removed failed output: {}\n".format(path))
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='run.py',
                                      description='run jobs')
@@ -32,6 +67,7 @@ if __name__ == '__main__':
     parser.add_argument('-N', '--job_name', default=None, help='job name')
     parser.add_argument('-e', '--log_file', default=None, help='log file')
     parser.add_argument('-S', '--shell', default='/bin/bash', help='shell')
+    parser.add_argument('-q', '--queue', default=None, help='queue name')
     parser.add_argument('--servers', default=None, nargs='*',
                         help='use these servers for checking non-zero output file size')
     args = parser.parse_args()
@@ -87,6 +123,8 @@ if __name__ == '__main__':
         my_job = job.LocalJob(job_script=job_script, out_file=args.out_file, log_file=args.log_file, shell=args.shell)
     elif cluster_engine == 'sge':
         qsub_args = "-V -wd {pwd} -now n -notify -b n -S {shell}".format(pwd=os.getcwd(), shell=args.shell)
+        if args.queue is not None:
+            qsub_args += " -q {}".format(args.queue)
         if job_name is not None:
             qsub_args += " -N {}".format(job_name)
         if args.log_file is not None:
@@ -101,6 +139,8 @@ if __name__ == '__main__':
                                     remote_check_servers=args.servers)
     elif cluster_engine == 'pbs':
         qsub_args = "-d {pwd} -S {shell}".format(pwd=os.getcwd(), shell=args.shell)
+        if args.queue is not None:
+            qsub_args += " -q {}".format(args.queue)
         if job_name is not None:
             qsub_args += " -N {}".format(job_name)
         if args.log_file is not None:
@@ -114,6 +154,8 @@ if __name__ == '__main__':
                             remote_check_servers=args.servers)
     elif cluster_engine == 'lsf':
         qsub_args = "-cwd {pwd} -L {shell}".format(pwd=os.getcwd(), shell=args.shell)
+        if args.queue is not None:
+            qsub_args += " -q {}".format(args.queue)
         if job_name is not None:
             qsub_args += " -J {}".format(job_name)
         if args.log_file is not None:
@@ -141,4 +183,9 @@ if __name__ == '__main__':
             exit_status += 66
     else:
         exit_status = 1
+
+    # Ensure failed targets are removed so make can safely rebuild them.
+    if exit_status != 0 and args.out_file is not None:
+        _cleanup_failed_outputs(args.out_file)
+
     sys.exit(exit_status)

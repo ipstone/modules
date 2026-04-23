@@ -38,11 +38,8 @@ BWA_BAMS = $(foreach sample,$(SAMPLES),bam/$(sample).bam)
 
 bwamem : $(BWA_BAMS) $(addsuffix .bai,$(BWA_BAMS))
 
-bam/%.bam : bwamem/bam/%.bwamem.sorted.filtered.bam
+bam/%.bam : bwamem/bam/%.bwamem.$(BAM_SUFFIX)
 	$(call RUN,,"ln -f $(<) $(@)")
-
-# Debug: check what BAM_SUFFIX resolves to
-$(info BAM_SUFFIX is $(BAM_SUFFIX))
 
 #$(call align-split-fastq,name,split-name,fastqs)
 define align-split-fastq
@@ -61,10 +58,6 @@ bwamem/bam/%.bwamem.bam : fastq/%.fastq.gz
 
 fastq/%.fastq.gz : fastq/%.fastq
 	$(call RUN,,"gzip -c $< > $(@) && $(RM) $<")
-
-# Copy final processed BAM files to unprocessed_bam for merging
-unprocessed_bam/%.bam : bwamem/bam/%.bwamem.sorted.filtered.bam
-	$(call RUN,-s 4G -m 6G,"cp $< $@")
 
 include modules/bam_tools/processBam.mk
 include modules/fastq_tools/fastq.mk

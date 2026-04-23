@@ -3,7 +3,8 @@ include modules/Makefile.inc
 LOGDIR ?= log/merge_sv.$(NOW)
 
 # SV_CALLERS = svaba gridss manta
-SV_CALLERS = gridss manta
+# SV_CALLERS = gridss manta
+SV_CALLERS = svaba manta
 MAX_DIST = 500
 NUM_CALLERS = 2
 TYPE = 0
@@ -22,13 +23,13 @@ merge_sv/$1_$2/samples.txt : $(foreach caller,$(SV_CALLERS),vcf/$1_$2.$(caller)_
 
 merge_sv/$1_$2/$1_$2.merged_sv.vcf : merge_sv/$1_$2/samples.txt
 	$$(call RUN,-c -n 1 -s 4G -m 8G -v $(SURVIVOR_ENV),"set -o pipefail && \
-							    SURVIVOR merge $$(<) \
-							    $(MAX_DIST) $(NUM_CALLERS) $(TYPE) $(STRAND) 0 $(MIN_SIZE) $$(@)")
+						    SURVIVOR merge $$(<) \
+						    $(MAX_DIST) $(NUM_CALLERS) $(TYPE) $(STRAND) 0 $(MIN_SIZE) $$(@)")
 
 merge_sv/$1_$2/$1_$2.merged_sv_ft.vcf : merge_sv/$1_$2/$1_$2.merged_sv.vcf
 	$$(call RUN,-c -n 1 -s 4G -m 8G -v $(INNOVATION_ENV),"set -o pipefail && \
-							      grep '##' $$(<) > $$(@) && \
-							      $$(RSCRIPT) modules/scripts/filter_sv.R --input_file $$(<) --output_file $$(@)")
+						      grep '##' $$(<) > $$(@) && \
+						      $$(RSCRIPT) modules/scripts/filter_sv.R --input_file $$(<) --output_file $$(@)")
 
 
 vcf/$1_$2.merged_sv.vcf : merge_sv/$1_$2/$1_$2.merged_sv_ft.vcf

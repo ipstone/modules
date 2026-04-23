@@ -351,13 +351,11 @@ TARGETS += manta_tumor_normal
 manta_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/manta_tumor_normal.mk)
 	
+SVABA_NUM_ATTEMPTS ?= 1
 TARGETS += svaba_tumor_normal
+svaba_tumor_normal : NUM_ATTEMPTS = $(SVABA_NUM_ATTEMPTS)
 svaba_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/svaba_tumor_normal.mk)
-	
-TARGETS += svaba
-svabaTN :
-	$(call RUN_MAKE,modules/sv_callers/svabaTN.mk)
 
 TARGETS += gridss_tumor_normal
 gridss_tumor_normal :
@@ -502,7 +500,7 @@ bam_interval_metrics :
 
 TARGETS += wgs_metrics
 wgs_metrics :
-	$(call RUN_MAKE,modules/qc/wgs_metrics.mk)
+	$(call RUN_MAKE,modules/wgs_metrics.mk)
 
 TARGETS += rnaseq_metrics
 rnaseq_metrics :
