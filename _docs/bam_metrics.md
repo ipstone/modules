@@ -47,5 +47,6 @@ make bam_metrics USE_CLUSTER=false
 ## Comparison with wgs_metrics
 - `wgs_metrics` is designed for whole-genome sequencing data with key differences:
   - Includes WGS coverage and duplicate metrics (no hybrid selection metrics)
+  - Keeps duplicate metrics enabled by default and reuses alignment-stage `metrics/*.dup_metrics.txt` files when available
   - Uses extended walltime for WGS processing
   - Lower insert size threshold (0.05 vs 0.5) for WGS data

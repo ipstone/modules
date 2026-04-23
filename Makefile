@@ -38,15 +38,12 @@ somatic_variants :
 	
 TARGETS += copynumber_summary
 copynumber_summary:
-	$(MAKE) -f modules/copy_number/genomealtered.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/copy_number/lstscore.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/copy_number/ntaiscore.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/copy_number/myriadhrdscore.mk -j $(NUM_JOBS)
+	$(MAKE) -f modules/copy_number/facets.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/genomesummary.mk)
 
 TARGETS += hotspot_summary
 hotspot_summary:
-	$(MAKE) -f modules/variant_callers/genotypehotspots.mk -j $(NUM_JOBS)
+	$(MAKE) -f modules/variant_callers/hotspot.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/hotspotsummary.mk)
 
 TARGETS += viral_detection
@@ -54,22 +51,17 @@ viral_detection:
 	$(MAKE) -f modules/fastq_tools/extractReads.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/fastq_tools/bamtoFasta.mk -j $(NUM_JOBS)
 	$(MAKE) -f modules/fastq_tools/blastReads.mk -j $(NUM_JOBS)
-	$(call RUN_MAKE,modules/virus/kronaClassify.mk)
+	$(call RUN_MAKE,modules/virus/krona_classify.mk)
 
 TARGETS += multisample_pyclone
 multisample_pyclone:
 	$(MAKE) -f modules/copy_number/ascat.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/variant_callers/sufammultisample.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/clonality/setuppyclone.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/clonality/runpyclone.mk -j $(NUM_JOBS)
-	$(call RUN_MAKE,modules/clonality/plotpyclone.mk)
+	$(MAKE) -f modules/variant_callers/sufamsampleset.mk -j $(NUM_JOBS)
+	$(call RUN_MAKE,modules/clonality/pyclone_vi.mk)
 
 TARGETS += run_cnvkit
 run_cnvkit :
-	$(MAKE) -f modules/copy_number/cnvkitcoverage.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/copy_number/cnvkitreference.mk -j $(NUM_JOBS)
-	$(MAKE) -f modules/copy_number/cnvkitfix.mk -j $(NUM_JOBS)
-	$(call RUN_MAKE,modules/copy_number/cnvkitplot.mk)
+	$(call RUN_MAKE,modules/copy_number/cnvkit.mk)
 
 TARGETS += mosdepth_wgs
 mosdepth_wgs :
@@ -140,10 +132,7 @@ TARGETS += somatic_sniper
 somatic_sniper :
 	$(call RUN_MAKE,modules/variant_callers/somatic/somaticSniper.mk)
 
-TARGETS += snvmix
-snvmix :
-	$(call RUN_MAKE,modules/variant_callers/snvmix.mk)
-	
+
 TARGETS += tvcTN
 tvcTN :
 	$(call RUN_MAKE,modules/variant_callers/somatic/tvcTN.mk)
@@ -208,9 +197,6 @@ TARGETS += hla_polysolver
 hla_polysolver :
 	$(call RUN_MAKE,modules/variant_callers/somatic/polysolver.mk)
 	
-TARGETS += pyrohmm
-pyrohmm :
-	$(call RUN_MAKE,modules/variant_callers/pyroHMMVar.mk)
 
 TARGETS += museqTN
 museqTN :
@@ -220,9 +206,6 @@ TARGETS += hotspot
 hotspot : 
 	$(call RUN_MAKE,modules/variant_callers/hotspot.mk)
 	
-TARGETS += jsm
-jsm :
-	$(call RUN_MAKE,modules/variant_callers/somatic/jsm.mk)
 
 TARGETS += sufam
 sufam:
@@ -624,6 +607,7 @@ recurrent_mutations :
 	
 TARGETS += genome_summary
 genome_summary :
+	$(MAKE) -f modules/copy_number/facets.mk -j $(NUM_JOBS)
 	$(call RUN_MAKE,modules/summary/genomesummary.mk)
 
 TARGETS += mutation_summary
@@ -665,42 +649,17 @@ ann_summary_vcf :
 
 
 #==================================================
-# beta testing
+# compatibility aliases
 #==================================================
 
-TARGETS += qdnaseq_copynumber_test
-qdnaseq_copynumber_test:
-	$(call RUN_MAKE,modules/test/copy_number/qdnaseqcopynumber.mk)
-	
-TARGETS += cnvkit_coverage_test
-cnvkit_coverage_test :
-	$(call RUN_MAKE,modules/test/copy_number/cnvkitcoverage.mk)
-	
-TARGETS += cnvkit_reference_test
-cnvkit_reference_test :
-	$(call RUN_MAKE,modules/test/copy_number/cnvkitreference.mk)
-	
-TARGETS += cnvkit_fix_test
-cnvkit_fix_test :
-	$(call RUN_MAKE,modules/test/copy_number/cnvkitfix.mk)
-
-TARGETS += cnvkit_plot_test
-cnvkit_plot_test :
-	$(call RUN_MAKE,modules/test/copy_number/cnvkitplot.mk)
-	
 TARGETS += cravat_annotation
 cravat_annotation :
-	$(call RUN_MAKE,modules/test/annotations/cravat_annotation.mk)
+	$(call RUN_MAKE,modules/vcf_tools/cravat_annotation.mk)
 
 
 #==================================================
 # alpha testing
 #==================================================
-	
-TARGETS += run_qdnaseq
-run_qdnaseq :
-	$(MAKE) -f modules/test/copy_number/qdnaseqextract.mk -j $(NUM_JOBS)
-	$(call RUN_MAKE,modules/test/copy_number/qdnaseqcopynumber.mk)
 
 TARGETS += config
 config :

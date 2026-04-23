@@ -27,9 +27,11 @@ DUPLICATE_METRICS_WALLTIME ?= 72:00:00
 DUPLICATE_METRICS_HEAP ?= 12G
 
 ENABLE_OXOG_METRICS ?= true
-# MarkDuplicates is timing out for some samples; disable duplicate metrics until
-# the WGS metrics path is stable again.
-ENABLE_DUPLICATE_METRICS ?= false
+# Keep duplicate metrics enabled by default for WGS QC. When alignment has
+# already produced metrics/<sample>.dup_metrics.txt (or an archived copy under
+# metrics/_previous/), reuse that file directly; only fall back to a fresh
+# MarkDuplicates metrics pass when no prior duplicate metrics are available.
+ENABLE_DUPLICATE_METRICS ?= true
 
 WGS_METRICS_DEPS = $(foreach sample,$(SAMPLES),metrics/$(sample).idx_stats.txt) \
                    $(foreach sample,$(SAMPLES),metrics/$(sample).aln_metrics.txt) \
@@ -111,14 +113,17 @@ metrics/$1.wgs_metrics.txt : bam/$1.bam
 						OUTPUT=$$(@) \
 						REFERENCE_SEQUENCE=$$(REF_FASTA)")
 
-metrics/$1.duplicate_metrics.txt : bam/$1.bam
-	$$(call RUN, -c -n 1 -s $(DUPLICATE_METRICS_SWAP) -m $(DUPLICATE_METRICS_MEM) -w $(DUPLICATE_METRICS_WALLTIME),"set -o pipefail && \
+metrics/$1.duplicate_metrics.txt : $$(or $$(wildcard metrics/$1.dup_metrics.txt),$$(wildcard metrics/_previous/$1.dup_metrics.txt),bam/$1.bam)
+	$$(if $$(filter bam/$1.bam,$$(<)), \
+		$$(call RUN, -c -n 1 -s $(DUPLICATE_METRICS_SWAP) -m $(DUPLICATE_METRICS_MEM) -w $(DUPLICATE_METRICS_WALLTIME),"set -o pipefail && \
 						$(METRICS_JAVA) -Xmx$(DUPLICATE_METRICS_HEAP) -jar $(METRICS_PICARD_JAR) MarkDuplicates \
 						$(METRICS_COMMON_OPTS) \
 						INPUT=$$(<) \
 						ASSUME_SORT_ORDER=coordinate \
 						OUTPUT=/dev/null \
-						METRICS_FILE=$$(@)")
+						CREATE_INDEX=false \
+						METRICS_FILE=$$(@)"), \
+		$$(INIT) cp $$(<) $$(@))
 
 endef
 $(foreach sample,$(SAMPLES),	$(eval $(call picard-metrics,$(sample))))

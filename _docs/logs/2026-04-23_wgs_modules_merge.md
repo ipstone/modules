@@ -171,9 +171,9 @@ This file received the most extensive overhaul, combining improvements from both
   - `DEFAULT_METRICS_*`, `OXOG_METRICS_*`, `WGS_METRICS_*`, `DUPLICATE_METRICS_*`
 - **Toggleable metrics**:
   - `ENABLE_OXOG_METRICS ?= true`
-  - `ENABLE_DUPLICATE_METRICS ?= false`  
-    *Rationale*: MarkDuplicates was timing out on some WGS samples; disabling allows the rest of QC to proceed while the issue is debugged.
-- **Duplicate metrics**: switched from `CollectDuplicateMetrics` (deprecated) to `MarkDuplicates` with `OUTPUT=/dev/null`.
+  - `ENABLE_DUPLICATE_METRICS ?= true`  
+    *Rationale*: duplicate metrics are useful default WGS QC output, and the workflow now reuses `metrics/<sample>.dup_metrics.txt` from alignment whenever available. It only falls back to a fresh `MarkDuplicates` metrics pass if no prior duplicate-metrics file exists.
+- **Duplicate metrics**: switched from `CollectDuplicateMetrics` (deprecated) to `MarkDuplicates` with `OUTPUT=/dev/null`, with reuse of alignment-stage duplicate-metrics files when present.
 - **Walltimes**: OxoG 48h, WGS 72h, Duplicates 72h (up from uniform 24h).
 
 #### `scripts/wgs_metrics.R`
@@ -236,7 +236,7 @@ wgs_metrics.mk
 4. **Queue submission**: `run.py` now accepts `-q cpuqueue`. If your cluster uses a different queue name, export or pass the appropriate value.
 5. **Gridss filter env**: if gridss somatic filter crashes with BLAS threading errors, confirm `GRIDSS_FILTER_ENV` is being applied.
 6. **Test alignment**: run `make bwamem` on a small WGS sample; verify `.sorted.bam` is produced by `samtools sort` and that `.bai` indexing runs `quickcheck` first.
-7. **Test wgs_metrics**: run `make wgs_metrics` on a subset; confirm `summary/wgs_metrics.txt` and `summary/duplicate_metrics.txt` (if enabled) are generated.
+7. **Test wgs_metrics**: run `make wgs_metrics` on a subset; confirm `summary/wgs_metrics.txt` and `summary/duplicate_metrics.txt` are generated, preferably reusing alignment-stage `metrics/*.dup_metrics.txt` files when present.
 8. **Test SV calling**: run `make svaba_tumor_normal` and `make gridss_tumor_normal` on one tumor-normal pair; verify VCFs appear in `vcf/`.
 
 ---
