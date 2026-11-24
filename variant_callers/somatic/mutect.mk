@@ -11,7 +11,7 @@ MUTECT_FILTERS = DuplicateRead FailsVendorQualityCheck NotPrimaryAlignment BadMa
 MUTECT_OPTS ?= --enable_extended_output --max_alt_alleles_in_normal_count $(MUTECT_MAX_ALT_IN_NORMAL) \
 			   --max_alt_allele_in_normal_fraction $(MUTECT_MAX_ALT_IN_NORMAL_FRACTION) -R $(REF_FASTA) \
 			   --dbsnp $(DBSNP) $(foreach ft,$(MUTECT_FILTERS),-rf $(ft))
-MUTECT = $(JAVA7) -Xmx16G -jar $(MUTECT_JAR) --analysis_type MuTect $(MUTECT_OPTS)
+MUTECT = $(JAVA7) -Xmx$(MUTECT_JAVA_MEM) -jar $(MUTECT_JAR) --analysis_type MuTect $(MUTECT_OPTS)
 
 MUTECT_USE_CONTEST ?= false
 
@@ -74,7 +74,7 @@ $(foreach chunk,$(MUTECT_CHUNKS), \
 define mutect-tumor-normal-chr
 mutect/chr_vcf/$1_$2.$3.mutect.vcf : bam/$1.bam bam/$2.bam \
 	$$(if $$(findstring true,$$(MUTECT_USE_CONTEST)),contest/$1_$2.contest.txt) bam/$1.bam.bai bam/$2.bam.bai
-	$$(call RUN,-c -s 18G -m 24G -w 7200,"$$(MKDIR) mutect/chr_tables mutect/cov; \
+	$$(call RUN,-c $$(MUTECT_CHR_RESOURCES),"$$(MKDIR) mutect/chr_tables mutect/cov; \
 		$$(MUTECT) --tumor_sample_name $1 --normal_sample_name $2 \
 		$$(if $$(findstring true,$$(MUTECT_USE_CONTEST)),--fraction_contamination `csvcut -t -c contamination $$(<<<) | sed 1d`) \
 		--intervals $3 -I:tumor $$(<) -I:normal $$(<<) --out mutect/chr_tables/$1_$2.$3.mutect.txt  \
@@ -95,7 +95,7 @@ $(foreach pair,$(SAMPLE_PAIRS),$(eval $(call ext-mutect-tumor-normal,$(pair))))
 
 define mutect-tumor-normal
 vcf/$1_$2.mutect.vcf : $$(foreach chr,$$(CHROMOSOMES),mutect/chr_vcf/$1_$2.$$(chr).mutect.vcf)
-	$$(call RUN,-c -s 12G -m 24G -w 7200,"(grep '^#' $$<; cat $$^ | grep -v '^#' | grep PASS | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-c $$(MUTECT_MERGE_RESOURCES),"(grep '^#' $$<; cat $$^ | grep -v '^#' | grep PASS | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(MUTECT_SOURCE_ANN_VCF) > $$@.tmp && $$(call VERIFY_VCF,$$@.tmp,$$@)")
 endef
 $(foreach pair,$(SAMPLE_PAIRS),\
@@ -109,7 +109,7 @@ $(foreach pair,$(SAMPLE_PAIRS),$(eval $(call ext-mutect-tumor-normal,$(pair))))
 
 define mutect-tumor-normal
 vcf/$1_$2.mutect.vcf : $$(foreach chunk,$$(MUTECT_CHUNKS),mutect/chunk_vcf/$1_$2.chunk$$(chunk).mutect.vcf)
-	$$(call RUN,-c -s 12G -m 24G -w 7200,"(grep '^#' $$<; cat $$^ | grep -v '^#' | grep PASS | $$(VCF_SORT) $$(REF_DICT) -) | \
+	$$(call RUN,-c $$(MUTECT_MERGE_RESOURCES),"(grep '^#' $$<; cat $$^ | grep -v '^#' | grep PASS | $$(VCF_SORT) $$(REF_DICT) -) | \
 		$$(MUTECT_SOURCE_ANN_VCF) > $$@.tmp && $$(call VERIFY_VCF,$$@.tmp,$$@)")
 endef
 $(foreach pair,$(SAMPLE_PAIRS),\

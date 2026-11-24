@@ -76,7 +76,7 @@ endif
 # indices
 # if bam file is a symlink, need to create a symlink to index
 %.bam.bai : %.bam
-	$(call RUN,-c -s 36G -m 48G -w 8640,"$(SAMTOOLS) quickcheck -v $< || { status=\$$?; $(RM) $< $@ $(@:.bam.bai=.bai); exit \$$status; }; $(SAMTOOLS) index $< || { status=\$$?; $(RM) $@ $(@:.bam.bai=.bai); exit \$$status; }")
+	$(call RUN,-c $(BAM_INDEX_RESOURCES),"$(SAMTOOLS) quickcheck -v $< || { status=\$$?; $(RM) $< $@ $(@:.bam.bai=.bai); exit \$$status; }; $(SAMTOOLS) index $< || { status=\$$?; $(RM) $@ $(@:.bam.bai=.bai); exit \$$status; }")
 
 %.bai : %.bam.bai
 	$(INIT) cp $< $@
@@ -96,7 +96,7 @@ endif
 
 # filter
 %.filtered.bam : %.bam
-	$(call RUN,-s 36G -m 48G -w 8640,"tmp=$@.tmp.$$$$; $(SAMTOOLS) view -bF $(BAM_FILTER_FLAGS) $< > \$$tmp && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
+	$(call RUN,$(BAM_FILTER_RESOURCES),"tmp=$@.tmp.$$$$; $(SAMTOOLS) view -bF $(BAM_FILTER_FLAGS) $< > \$$tmp && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
 
 # Remove reads mapping to chromomsomes prefixed with mouse, used for PDX
 # combined reference alignment. Filters mouse reads.
@@ -108,7 +108,7 @@ endif
 
 # recalibrate base quality
 %.recal_report.grp : %.bam %.bai
-	$(call RUN,-s 36G -m 48G -w 8640,"$(call GATK_MEM2,8G) -T BaseRecalibrator -R $(REF_FASTA) $(BAM_BASE_RECAL_OPTS) -I $< -o $@")
+	$(call RUN,$(BAM_BASE_RECAL_RESOURCES),"$(call GATK_MEM2,$(BAM_BASE_RECAL_JAVA_MEM)) -T BaseRecalibrator -R $(REF_FASTA) $(BAM_BASE_RECAL_OPTS) -I $< -o $@")
 
 #%.sorted.bam : %.bam
 #	$(call RUN,-n 4 -s 3G -m 3G,"$(SAMTOOLS2) sort -m 2.8G -o $@ -O bam --reference $(REF_FASTA) -@ 4 $<")
@@ -129,7 +129,7 @@ endif
 
 # mark duplicates
 %.markdup.bam : %.bam
-	$(call RUN,-s 42G -m 52G -w 8640,"$(MKDIR) metrics; tmp=$@.tmp.$$$$; $(call MARK_DUP_MEM,15G) I=$< O=\$$tmp METRICS_FILE=metrics/$(call strip-suffix,$(@F)).dup_metrics.txt && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
+	$(call RUN,$(BAM_MARKDUP_RESOURCES),"$(MKDIR) metrics; tmp=$@.tmp.$$$$; $(call MARK_DUP_MEM,$(BAM_MARKDUP_JAVA_MEM)) I=$< O=\$$tmp METRICS_FILE=metrics/$(call strip-suffix,$(@F)).dup_metrics.txt && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
 
 %.rmdup.bam : %.bam
 	$(call RUN,-s 4G -m 7G,"$(SAMTOOLS) rmdup $< $@ && $(RM) $<")
@@ -150,10 +150,10 @@ ifeq ($(SPLIT_CHR),true)
 # $(eval $(call chr-target-aln,chromosome))
 define chr-target-realn
 %.$1.chr_split.intervals : %.bam %.bam.bai
-	$$(call RUN,-n 8 -s 4G -m 6G -w 8640,"$$(call GATK_MEM2,5G) -T RealignerTargetCreator \
+	$$(call RUN,-n $$(BAM_REALN_TARGET_THREADS) $$(BAM_REALN_TARGET_RESOURCES),"$$(call GATK_MEM2,5G) -T RealignerTargetCreator \
 		-I $$(<) \
 		-L $1 \
-		-nt 8 -R $$(REF_FASTA)  -o $$@ $$(BAM_REALN_TARGET_OPTS)")
+		-nt $$(BAM_REALN_TARGET_THREADS) -R $$(REF_FASTA)  -o $$@ $$(BAM_REALN_TARGET_OPTS)")
 endef
 $(foreach chr,$(CHROMOSOMES),$(eval $(call chr-target-realn,$(chr))))
 
@@ -163,24 +163,24 @@ $(foreach chr,$(CHROMOSOMES),$(eval $(call chr-target-realn,$(chr))))
 # $(eval $(call chr-aln,chromosome))
 define chr-realn
 %.$(1).chr_realn.bam : %.bam %.$(1).chr_split.intervals %.bam.bai
-	$$(call RUN,-s 32G -m 32G -w 8640,"tmp=$$@.tmp.$$$$$$$$; if [[ -s $$(word 2,$$^) ]]; then $$(call GATK_MEM2,8G) -T IndelRealigner \
+	$$(call RUN,$$(BAM_CHR_REALN_RESOURCES),"tmp=$$@.tmp.$$$$$$$$; if [[ -s $$(word 2,$$^) ]]; then $$(call GATK_MEM2,$$(BAM_CHR_REALN_JAVA_MEM)) -T IndelRealigner \
 		-I $$(<) -R $$(REF_FASTA) -L $1 -targetIntervals $$(word 2,$$^) \
 		-o \$$$$tmp $$(BAM_REALN_OPTS); \
-		else $$(call GATK_MEM2,16G) -T PrintReads -R $$(REF_FASTA) -I $$< -L $1 -o \$$$$tmp ; fi && mv \$$$$tmp $$@ || { status=\$$$$?; $$(RM) \$$$$tmp; exit \$$$$status; }")
+		else $$(call GATK_MEM2,$$(BAM_CHR_PRINTREADS_JAVA_MEM)) -T PrintReads -R $$(REF_FASTA) -I $$< -L $1 -o \$$$$tmp ; fi && mv \$$$$tmp $$@ || { status=\$$$$?; $$(RM) \$$$$tmp; exit \$$$$status; }")
 endef
 $(foreach chr,$(CHROMOSOMES),$(eval $(call chr-realn,$(chr))))
 
 # merge sample realn chromosome bams
 %.realn.bam : $(foreach chr,$(CHROMOSOMES),%.$(chr).chr_realn.bam) $(foreach chr,$(CHROMOSOMES),%.$(chr).chr_realn.bai)
-	$(call RUN,-n 6 -s 10G -m 12G -w 8640,"tmp=$@.tmp.$$$$; $(MERGE_SAMS) $(foreach i,$(filter %.bam,$^), I=$(i)) SORT_ORDER=coordinate O=\$$tmp USE_THREADING=true && mv \$$tmp $@ && $(RM) $^ $(@:.realn.bam=.bam) || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
+	$(call RUN,$(BAM_MERGE_CHR_RESOURCES),"tmp=$@.tmp.$$$$; $(MERGE_SAMS) $(foreach i,$(filter %.bam,$^), I=$(i)) SORT_ORDER=coordinate O=\$$tmp USE_THREADING=true && mv \$$tmp $@ && $(RM) $^ $(@:.realn.bam=.bam) || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
 
 # merge sample recal chromosome bams
 %.recal.bam : $(foreach chr,$(CHROMOSOMES),%.$(chr).chr_recal.bam) $(foreach chr,$(CHROMOSOMES),%.$(chr).chr_recal.bai)
-	$(call RUN,-n 6 -s 10G -m 12G -w 8640,"tmp=$@.tmp.$$$$; $(MERGE_SAMS) $(foreach i,$(filter %.bam,$^), I=$(i)) SORT_ORDER=coordinate O=\$$tmp USE_THREADING=true && mv \$$tmp $@ && $(RM) $^ $(@:.recal.bam=.bam) || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
+	$(call RUN,$(BAM_MERGE_CHR_RESOURCES),"tmp=$@.tmp.$$$$; $(MERGE_SAMS) $(foreach i,$(filter %.bam,$^), I=$(i)) SORT_ORDER=coordinate O=\$$tmp USE_THREADING=true && mv \$$tmp $@ && $(RM) $^ $(@:.recal.bam=.bam) || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
 
 define chr-recal
 %.$1.chr_recal.bam : %.bam %.recal_report.grp
-	$$(call RUN,-s 32G -m 48G -w 8640,"tmp=$$@.tmp.$$$$$$$$; $$(call GATK_MEM2,8G) -T PrintReads -L $1 -R $$(REF_FASTA) -I $$< -BQSR $$(<<) -o \$$$$tmp && mv \$$$$tmp $$@ || { status=\$$$$?; $$(RM) \$$$$tmp; exit \$$$$status; }")
+	$$(call RUN,$$(BAM_CHR_RECAL_RESOURCES),"tmp=$$@.tmp.$$$$$$$$; $$(call GATK_MEM2,$$(BAM_CHR_RECAL_JAVA_MEM)) -T PrintReads -L $1 -R $$(REF_FASTA) -I $$< -BQSR $$(<<) -o \$$$$tmp && mv \$$$$tmp $$@ || { status=\$$$$?; $$(RM) \$$$$tmp; exit \$$$$status; }")
 endef
 $(foreach chr,$(CHROMOSOMES),$(eval $(call chr-recal,$(chr))))
 
@@ -188,7 +188,7 @@ else # no splitting by chr
 
 # recalibration
 %.recal.bam : %.bam %.recal_report.grp
-	$(call RUN,-s 14G -m 15G -w 8640,"tmp=$@.tmp.$$$$; $(call GATK_MEM2,7G) -T PrintReads -R $(REF_FASTA) -I $< -BQSR $(word 2,$^) -o \$$tmp && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
+	$(call RUN,$(BAM_RECAL_RESOURCES),"tmp=$@.tmp.$$$$; $(call GATK_MEM2,7G) -T PrintReads -R $(REF_FASTA) -I $< -BQSR $(word 2,$^) -o \$$tmp && mv \$$tmp $@ && $(RM) $< || { status=\$$?; $(RM) \$$tmp; exit \$$status; }")
 
 %.realn.bam : %.bam %.intervals %.bam.bai
 	if [[ -s $(word 2,$^) ]]; then $(call RUN,-s 16G -m 16G,"tmp=$@.tmp.$$$$; $(call GATK_MEM2,7G) -T IndelRealigner \
