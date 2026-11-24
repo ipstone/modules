@@ -125,8 +125,8 @@ python $S --species human --seq-type WGS --config-only
     - `--bam-dir DIR`: `<sample>.bam` files, linked as `bam/<sample>.bam`
       and `bam/<sample>.bam.bai` (from `<sample>.bam.bai` or `<sample>.bai`).
       No alignment step follows.
-    - `--sample-sheet TSV`: the explicit design. Use it whenever the names do
-      not show tumor and normal clearly. Columns (tab-separated, header
+    - `--sample-sheet TSV`: the explicit design. Use it when the names do not
+      show which sample is a tumor and which a normal. Columns (tab-separated, header
       optional):
 
 ```
