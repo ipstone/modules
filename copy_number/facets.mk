@@ -42,10 +42,12 @@ else
 FACETS_SNP_VCF = $(FACETS_DBSNP)
 endif
 
+# FACETS_GENE_ANNOT: gene BED (chrom start end hgnc band) for facetsGeneCN.R
+# --annotFile; GRCm38.inc sets the mm10 file, human uses the script default
 FACETS_GENE_CN_OPTS = $(if $(GENES_FILE),--genesFile $(GENES_FILE)) \
 					  --mysqlHost $(EMBL_MYSQLDB_HOST) --mysqlPort $(EMBL_MYSQLDB_PORT) \
 					  --mysqlUser $(EMBL_MYSQLDB_USER) $(if $(EMBL_MYSQLDB_PW),--mysqlPassword $(EMBL_MYSQLDB_PW)) \
-					  --mysqlDb $(EMBL_MYSQLDB_DB)
+					  --mysqlDb $(EMBL_MYSQLDB_DB)$(if $(FACETS_GENE_ANNOT), --annotFile $(FACETS_GENE_ANNOT))
 FACETS_PLOT_GENE_CN_OPTS = --sampleColumnPostFix '_LRR_threshold'
 
 

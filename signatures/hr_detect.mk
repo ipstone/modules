@@ -1,4 +1,5 @@
 include modules/Makefile.inc
+$(call require-human,hr_detect)
 
 LOGDIR ?= log/hr_detect.$(NOW)
 

@@ -1,4 +1,5 @@
 include modules/Makefile.inc
+$(call require-human,mimsi)
 
 LOGDIR ?= log/mimsi.$(NOW)
 

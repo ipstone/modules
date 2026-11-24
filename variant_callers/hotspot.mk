@@ -1,6 +1,7 @@
 # run unified genotyper on hotspots
 
 include modules/Makefile.inc
+$(call require-human,hotspot)
 include modules/variant_callers/gatk.inc
 
 LOGDIR ?= log/hotspot.$(NOW)

@@ -1,4 +1,5 @@
 include modules/Makefile.inc
+$(call require-human,hotspot_summary)
 
 LOGDIR ?= log/hotspot_summary.$(NOW)
 PHONY += hotspot summary summary/tsv

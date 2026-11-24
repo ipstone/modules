@@ -1,4 +1,5 @@
 include modules/Makefile.inc
+$(call require-human,msisensor)
 
 LOGDIR ?= log/msisensor.$(NOW)
 
