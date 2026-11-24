@@ -127,8 +127,9 @@ CMO_HOTSPOT_FILE = $(REF_DIR)/hotspot_list.txt
 # genome build name passed to cravat -l
 CRAVAT_GENOME ?= hg19
 
-# GRIDSS needs its own copy of the FASTA (it writes index files beside it)
-GRIDSS_REF ?= /data/riazlab/lib/reference/b37_dmp/b37.fasta
+# FASTA copy prepared for GRIDSS (it keeps its own index files beside it);
+# used by sv_callers/gridss_tumor_normal.mk
+GRIDSS_REF_FASTA ?= /data/riazlab/lib/reference/b37_dmp/b37.fasta
 
 # default bait/target interval lists for qc/bam_interval_metrics.mk (IMPACT505)
 INTERVAL_METRICS_BAITS_LIST ?= $(HOME)/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_baits.list

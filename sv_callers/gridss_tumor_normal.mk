@@ -8,12 +8,15 @@ GRIDSS_HARD_MEM ?= 10G
 GRIDSS_QUEUE ?= cpuqueue
 GRIDSS_WALLTIME ?= 168:00:00
 GRIDSS_CORE_ULIMIT ?= 0
-# genome includes may set GRIDSS_REF (b37.inc does); otherwise use REF_FASTA
-GRIDSS_REF ?= $(REF_FASTA)
-GRIDSS_BLACKLIST ?= $(HOME)/share/lib/resource_files/gridss/example/ENCFF001TDO.bed
+# GRIDSS_REF_FASTA comes from the genome include (b37.inc); otherwise REF_FASTA
+GRIDSS_REF ?= $(if $(GRIDSS_REF_FASTA),$(GRIDSS_REF_FASTA),$(REF_FASTA))
+# GRIDSS_BLACKLIST (hg19 ENCODE blacklist) and GRIDSS_PON_DIR (human PON)
+# default to the human files only when SPECIES=human; for other species they
+# are empty and the -b / --pondir options are left out.
+GRIDSS_BLACKLIST ?= $(if $(filter human,$(SPECIES)),$(HOME)/share/lib/resource_files/gridss/example/ENCFF001TDO.bed)
 GRIDSS ?= gridss
 GRIDSS_FILTER ?= gridss_somatic_filter
-GRIDSS_PON_DIR ?= $(HOME)/share/lib/resource_files/gridss/pon/
+GRIDSS_PON_DIR ?= $(if $(filter human,$(SPECIES)),$(HOME)/share/lib/resource_files/gridss/pon/)
 GRIDSS_FILTER_SOFT_MEM ?= 32G
 GRIDSS_FILTER_HARD_MEM ?= 48G
 GRIDSS_FILTER_QUEUE ?= $(GRIDSS_QUEUE)
@@ -36,7 +39,7 @@ gridss/$1_$2/$1_$2.gridss_sv.vcf : bam/$1.bam bam/$2.bam
 							    -t $$(GRIDSS_CORES) \
 							    -r $$(GRIDSS_REF) \
 							    -o $1_$2.gridss_sv.vcf \
-							    -b $$(GRIDSS_BLACKLIST) \
+							    $$(if $$(GRIDSS_BLACKLIST),-b $$(GRIDSS_BLACKLIST)) \
 							    ../../bam/$2.bam \
 							    ../../bam/$1.bam")
 							    
@@ -45,7 +48,7 @@ gridss/$1_$2/$1_$2.gridss_sv_ft.vcf.bgz : gridss/$1_$2/$1_$2.gridss_sv.vcf
 							    ulimit -c $$(GRIDSS_CORE_ULIMIT) && \
 							    cd gridss/$1_$2 && \
 							    $$(GRIDSS_FILTER_ENV) $$(GRIDSS_FILTER) \
-							    --pondir $$(GRIDSS_PON_DIR) \
+							    $$(if $$(GRIDSS_PON_DIR),--pondir $$(GRIDSS_PON_DIR)) \
 							    --input $1_$2.gridss_sv.vcf \
 							    --output $1_$2.gridss_sv_ft.vcf \
 							    -n 1 \
