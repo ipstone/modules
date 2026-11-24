@@ -7,8 +7,6 @@ import sys
 import errno
 import os
 import job
-import math
-import re
 
 
 def _failed_output_paths(out_file):
@@ -60,7 +58,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--check', default=False, action='store_true', help='check for non-zero file size')
     parser.add_argument('-d', '--docker', default=False, action='store_true', help='request docker support')
     parser.add_argument('-I', '--internet', default=False, action='store_true', help='request internet access')
-    parser.add_argument('-g', '--cluster_engine', default='sge', help='cluster engine (sge, lfs, or pbs supported)')
+    parser.add_argument('-g', '--cluster_engine', default='sge',
+                        help='cluster engine, case-insensitive: lsf, slurm, sge, pbs or local')
     parser.add_argument('-l', '--local', default=False, action='store_true', help='run job locally')
     parser.add_argument('-o', '--out_file', default=None, help='output file to check')
     parser.add_argument('-p', '--project_name', default=None, help='project name')
@@ -68,13 +67,14 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--log_file', default=None, help='log file')
     parser.add_argument('-S', '--shell', default='/bin/bash', help='shell')
     parser.add_argument('-q', '--queue', default=None, help='queue name')
+    parser.add_argument('--extra_args', default=None,
+                        help='extra scheduler arguments appended to every submission (CLUSTER_EXTRA_ARGS)')
+    parser.add_argument('--internet_args', default=None,
+                        help='slurm: arguments that select a node with internet access '
+                        '(CLUSTER_INTERNET_ARGS); without them internet jobs run locally')
     parser.add_argument('--servers', default=None, nargs='*',
                         help='use these servers for checking non-zero output file size')
     args = parser.parse_args()
-
-    cluster_engine = args.cluster_engine.lower()
-    total_hard_mem = args.num_cores * job.human2bytes(args.hard_memory)
-    total_soft_mem = args.num_cores * job.human2bytes(args.soft_memory)
 
     env = None
     if args.env is not None:
@@ -119,60 +119,16 @@ if __name__ == '__main__':
     elif args.project_name is not None and args.out_file is not None:
         job_name = "{}_{}".format(args.project_name, os.path.basename(args.out_file))
 
-    if args.local or (args.internet and args.cluster_engine != 'lsf'):
-        my_job = job.LocalJob(job_script=job_script, out_file=args.out_file, log_file=args.log_file, shell=args.shell)
-    elif cluster_engine == 'sge':
-        qsub_args = "-V -wd {pwd} -now n -notify -b n -S {shell}".format(pwd=os.getcwd(), shell=args.shell)
-        if args.queue is not None:
-            qsub_args += " -q {}".format(args.queue)
-        if job_name is not None:
-            qsub_args += " -N {}".format(job_name)
-        if args.log_file is not None:
-            qsub_args += " -j y -o {}".format(args.log_file)
-        if args.num_cores > 1:
-            qsub_args += " -pe {penv} {num_cores}".format(penv=args.sge_parallel_env,
-                                                          num_cores=args.num_cores)
-        qsub_args += " -l virtual_free={soft_mem},h_vmem={hard_mem}".format(soft_mem=args.soft_memory,
-                                                                            hard_mem=args.hard_memory)
-        import drmaa_job
-        my_job = drmaa_job.DRMAAJob(job_script=job_script, qsub_args=qsub_args, out_file=args.out_file,
-                                    remote_check_servers=args.servers)
-    elif cluster_engine == 'pbs':
-        qsub_args = "-d {pwd} -S {shell}".format(pwd=os.getcwd(), shell=args.shell)
-        if args.queue is not None:
-            qsub_args += " -q {}".format(args.queue)
-        if job_name is not None:
-            qsub_args += " -N {}".format(job_name)
-        if args.log_file is not None:
-            qsub_args += " -j oe -o {}".format(args.log_file)
-        qsub_args += " -l nodes=1:ppn={num_cores}".format(num_cores=args.num_cores)
-        if args.docker:
-            qsub_args += ":docker"
-        qsub_args += " -l walltime={walltime} -l mem={total_mem}".format(walltime=args.walltime,
-                                                                         total_mem=total_hard_mem)
-        my_job = job.PBSJob(job_script=job_script, qsub_args=qsub_args, out_file=args.out_file,
-                            remote_check_servers=args.servers)
-    elif cluster_engine == 'lsf':
-        qsub_args = "-cwd {pwd} -L {shell}".format(pwd=os.getcwd(), shell=args.shell)
-        if args.queue is not None:
-            qsub_args += " -q {}".format(args.queue)
-        if job_name is not None:
-            qsub_args += " -J {}".format(job_name)
-        if args.log_file is not None:
-            qsub_args += " -o {}".format(args.log_file)
-        if args.internet:
-            qsub_args += ' -R "select[internet]"'
-        if args.num_cores > 1:
-            qsub_args += ' -n {num_cores} -R "span[hosts=1]"'.format(num_cores=args.num_cores)
-        hard_mem_gb = int(math.ceil(job.human2bytes(args.hard_memory) / 1000000000.0))
-        soft_mem_gb = int(math.ceil(job.human2bytes(args.soft_memory) / 1000000000.0))
-        walltime = re.sub(r'(\d+):(\d+):(\d+)', r'\g<1>:\g<2>', args.walltime)
-        qsub_args += ' -M {hard_mem_gb} -R "rusage[mem={soft_mem_gb}]" -W {walltime}'.format(
-            hard_mem_gb=hard_mem_gb, soft_mem_gb=soft_mem_gb, walltime=walltime)
-        my_job = job.LSFJob(job_script=job_script, qsub_args=qsub_args, out_file=args.out_file,
-                            remote_check_servers=None)  # checking filesize on remote servers not supported
-    else:
-        raise ValueError("invalid cluster engine. supported engines are sge, pbs, and lsf")
+    opts = job.JobOptions(engine=args.cluster_engine, local=args.local, internet=args.internet,
+                          docker=args.docker, num_cores=args.num_cores,
+                          soft_memory=args.soft_memory, hard_memory=args.hard_memory,
+                          walltime=args.walltime, queue=args.queue, job_name=job_name,
+                          log_file=args.log_file, out_file=args.out_file, shell=args.shell,
+                          cwd=os.getcwd(), servers=args.servers,
+                          sge_parallel_env=args.sge_parallel_env,
+                          extra_args=args.extra_args, internet_args=args.internet_args)
+    backend = job.select_backend(opts)
+    my_job = backend.make_job(job_script, opts)
 
     my_job.run_job()
     my_job.wait()
