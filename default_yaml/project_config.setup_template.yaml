@@ -48,6 +48,9 @@ bam_no_sort: <<bam_no_sort>>
 bam_fix_rg: <<bam_fix_rg>>
 bam_phred64: <<bam_phred64>>
 bam_reprocess: <<bam_reprocess>>
+# false for FASTQ input. true makes bam/<sample>.bam depend on
+# unprocessed_bam/<sample>.bam, and `make bwamem` then stops with "No rule to
+# make target 'unprocessed_bam/<sample>.bam'" (checked on lilac, 2026-11-24).
 merge_split_bams: <<merge_split_bams>>
 
 # ---------------------------------------------------------------- targets

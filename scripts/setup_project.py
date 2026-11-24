@@ -476,7 +476,7 @@ def build_config(args, ref, ref_preset, panel):
         'bam_fix_rg': False,
         'bam_phred64': False,
         'bam_reprocess': False,
-        'merge_split_bams': True,
+        'merge_split_bams': False,
         'targets_file': None, 'exome_bed': None, 'targets_list': None, 'call_intervals_bed': None,
         'ontarget_file': None, 'offtarget_file': None,
         'snv_type': args.snv_type,
