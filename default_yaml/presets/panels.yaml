@@ -1,0 +1,192 @@
+# Capture panel and exome kit presets for scripts/setup_project.py
+# (option --panel <name>; list them with --list-panels).
+#
+# Keys
+#   kind         panel (use with --seq-type PANEL) | exome (use with --seq-type WES)
+#   ref          the build the BED files are in; setup_project.py stops if
+#                --ref differs
+#   species      human | mouse
+#   description  one line
+#   targets_file panel: written as targets_file (TARGETS_FILE; also sets
+#                CHROMOSOMES and the calling intervals)
+#                exome: written as exome_bed (the genome include then sets
+#                TARGETS_FILE = EXOME_BED because seq_type WES sets EXOME = true)
+#   targets_list Picard interval list for qc/bam_metrics.mk CollectHsMetrics
+#                (TARGETS_LIST). Without it bam_metrics uses its built-in
+#                default MSK-IMPACT-v4.sorted.list, an older IMPACT version.
+#   ontarget_file / offtarget_file  CNVkit target and antitarget BEDs
+#                (copy_number/cnvkit.mk). null = no CNVkit BEDs for this panel.
+#   facets       pre_cval / cval1 / cval2 / min_nhet
+#   source_projects  lab projects on lilac that used this preset (read only)
+#   alternatives other BED files that exist for the same panel, and why the
+#                preset does not use them
+#   notes        shown in SETUP_NOTES.md
+#
+# Every path was checked on lilac with `ls -la` on 2026-11-24 (read only).
+# Contig names of all b37 BEDs below: 1..22 X Y (no chr prefix), the same as
+# ~/share/reference/b37_dmp/b37.fasta.
+
+IMPACT505:
+  kind: panel
+  ref: b37
+  species: human
+  description: "MSK-IMPACT 505 genes (current IMPACT version)"
+  targets_file: ~/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_targets.list
+  ontarget_file: ~/share/lib/bed_files/IMPACT505_b37_CNVkit_on-target.bed
+  offtarget_file: ~/share/lib/bed_files/IMPACT505_b37_CNVkit_off-target.bed
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects:
+    - /data/riazlab/projects/peix/parejaf/late_mosaicism/pipeline_runs (targets BED + targets list)
+    - /data/reis-filho/data/selenicp/MSK_IMPACT_synchronous_pair (impact505.bed)
+    - /data/reis-filho/data/selenicp/MSK_IMPACT_pole_herman (impact505.bed)
+  alternatives:
+    - "~/share/reference/target_panels/impact505.bed: the bait tiling (39,012 overlapping probes, 4.68 Mb summed length), used by the selenicp IMPACT505 projects. The targets BED above has 9,360 regions, 2.01 Mb."
+  notes:
+    - "Panel BED choice: the late_mosaicism project chose the targets BED; the selenicp projects use the bait tiling impact505.bed. Decide which one this project uses and keep it for all batches."
+    - "qc/bam_interval_metrics.mk already defaults to the IMPACT505 baits and targets lists (genome_inc/b37.inc)."
+
+IMPACT468:
+  kind: panel
+  ref: b37
+  species: human
+  description: "MSK-IMPACT 468 genes"
+  targets_file: ~/share/reference/target_panels/impact468.bed
+  targets_list: ~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.list
+  ontarget_file: ~/share/lib/bed_files/IMPACT468_b37_CNVkit_on-target.bed
+  offtarget_file: ~/share/lib/bed_files/IMPACT468_b37_CNVkit_off-target.bed
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects:
+    - /data/riazlab/projects/peix/parejaf/Fresia_Project_17318/run_pipelines (impact468.bed)
+  alternatives:
+    - "~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.bed: 6,585 gene-named regions, 1.31 Mb, no chrY. impact468.bed has 7,845 regions, 1.52 Mb, including chrY."
+    - "~/share/reference/target_panels/MSK-IMPACT-468_CNVkit_ontarget.bed / _offtarget.bed: older CNVkit BEDs (2019)."
+  notes:
+    - "The preset keeps impact468.bed because the Fresia 17318 project used it."
+
+IMPACT410:
+  kind: panel
+  ref: b37
+  species: human
+  description: "MSK-IMPACT 410 genes"
+  targets_file: ~/share/lib/bed_files/targets/IMPACT410/b37/IMPACT410_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/IMPACT410/b37/IMPACT410_b37_targets.list
+  ontarget_file: ~/share/lib/bed_files/IMPACT410_b37_CNVkit_on-target.bed
+  offtarget_file: ~/share/lib/bed_files/IMPACT410_b37_CNVkit_off-target.bed
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives:
+    - "~/share/reference/target_panels/impact410.bed (2018)."
+  notes:
+    - "No lab project on lilac was checked for this preset; the files exist (2026-11-24)."
+
+IMPACT341:
+  kind: panel
+  ref: b37
+  species: human
+  description: "MSK-IMPACT 341 genes"
+  targets_file: ~/share/lib/bed_files/targets/IMPACT341/b37/IMPACT341_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/IMPACT341/b37/IMPACT341_b37_targets.list
+  ontarget_file: ~/share/lib/bed_files/IMPACT341_b37_CNVkit_on-target.bed
+  offtarget_file: ~/share/lib/bed_files/IMPACT341_b37_CNVkit_off-target.bed
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives:
+    - "~/share/reference/target_panels/impact341.bed (2018)."
+  notes:
+    - "No lab project on lilac was checked for this preset; the files exist (2026-11-24)."
+
+HemePACT_v4:
+  kind: panel
+  ref: b37
+  species: human
+  description: "HemePACT v4 (haematological malignancy panel)"
+  targets_file: ~/share/lib/bed_files/targets/HemePACT_v4/b37/HemePACT_v4_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/HemePACT_v4/b37/HemePACT_v4_b37_targets.ilist
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives:
+    - "~/share/reference/target_panels/HemePACT_v4_TARGETS.bed and hemepact.b37.bed (2018-2019)."
+  notes:
+    - "No CNVkit BEDs exist for HemePACT; build them with cnvkit.py target/antitarget before running cnv_kit."
+    - "targets_list is an .ilist (Picard interval list); check that CollectHsMetrics accepts it before running bam_metrics."
+
+xgen_exome_v2:
+  kind: exome
+  ref: b37
+  species: human
+  description: "IDT xGen Exome Hyb Panel v2 (xGen Exome Research Panel v2.0)"
+  targets_file: ~/share/lib/bed_files/targets/IDT_Exome_xGen_v2/b37/IDT_Exome_xGen_v2_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/IDT_Exome_xGen_v2/b37/IDT_Exome_xGen_v2_b37_targets.list
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects:
+    - /data/riazlab/projects/peix/neogenomics_Atif/pipeline_alignment_run (its own copy with gene names, reference/target_bed/xgen-exome-hyb-panel-v2-targets-b37.bed; same coordinates)
+  alternatives:
+    - "~/share/reference/target_panels/xgen-exome-hyb-panel-v2-targets-b37.bed: same size (5,315,110 bytes) as the preset file."
+  notes:
+    - "neogenomics_Atif set targets_file without seq_type (old style). With seq_type WES the kit BED goes into exome_bed."
+
+sureselect_exome_v4:
+  kind: exome
+  ref: b37
+  species: human
+  description: "Agilent SureSelect Human All Exon V4 (the b37 genome include default)"
+  targets_file: ~/share/reference/target_panels/sure_select_exome_v4_b37.bed
+  targets_list: ~/share/lib/bed_files/targets/Agilent_v4_51MB_Human/b37/Agilent_v4_51MB_Human_b37_targets.list
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives:
+    - "~/share/lib/bed_files/targets/Agilent_v4_51MB_Human/b37/Agilent_v4_51MB_Human_b37_targets.bed"
+  notes:
+    - "This is EXOME_BED of genome_inc/b37.inc, so seq_type WES without --panel gives the same targets."
+
+idt_exome_v1:
+  kind: exome
+  ref: b37
+  species: human
+  description: "IDT xGen Exome v1 with fingerprint SNPs (IGO exome before xGen v2)"
+  targets_file: ~/share/lib/bed_files/targets/IDT_Exome_v1_FP/b37/IDT_Exome_v1_FP_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/IDT_Exome_v1_FP/b37/IDT_Exome_v1_FP_b37_targets.list
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives:
+    - "~/share/reference/target_panels/IDT_Exome_v1_FP_TARGETS_b37_nochr_noheader.bed"
+  notes: []
+
+agilent_exome_v5:
+  kind: exome
+  ref: b37
+  species: human
+  description: "Agilent SureSelect Human All Exon V5"
+  targets_file: ~/share/lib/bed_files/targets/AgilentExon_v5/b37/AgilentExon_v5_b37_targets.bed
+  targets_list: ~/share/lib/bed_files/targets/AgilentExon_v5/b37/AgilentExon_v5_b37_targets.ilist
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives: []
+  notes: []
+
+mouse_known_exons:
+  kind: exome
+  ref: GRCm38
+  species: mouse
+  description: "Mouse known-gene exons, GRCm38 (the GRCm38 genome include default; not a capture-kit BED)"
+  targets_file: ~/share/reference/mus_musculus_known_genes_exons_GRCm38_noheader.bed
+  targets_list: null
+  ontarget_file: null
+  offtarget_file: null
+  facets: {pre_cval: 50, cval1: 150, cval2: 50, min_nhet: 25}
+  source_projects: []
+  alternatives: []
+  notes:
+    - "No mouse capture-kit BED (for example Agilent SureSelect XT Mouse All Exon) was found under ~/share/reference, ~/share/reference/target_panels, ~/share/lib/bed_files or /data/riazlab/lib/reference (2026-11-24). /data/riazlab/lib/reference/Agilent_SureSelectBedFiles/S03723314_* is the HUMAN All Exon V4 design."
+    - "genome_inc/GRCm38.inc assigns TARGETS_FILE with '=' when EXOME is true, so exome_bed cannot change the mouse exome targets. For a real mouse capture kit use --seq-type PANEL --targets-file <kit BED>."

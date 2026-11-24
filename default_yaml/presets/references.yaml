@@ -1,0 +1,74 @@
+# Reference genome presets for scripts/setup_project.py.
+#
+# One entry per value of the project_config.yaml key `ref`. The genome
+# include genome_inc/<ref>.inc sets the real paths used by the pipeline; the
+# values below are used by setup_project.py only, to (1) fill the defaults of
+# a new project_config.yaml and (2) run the preflight checks.
+#
+# Keys
+#   species        human | mouse (genome_inc/GRCm38.inc sets SPECIES = mouse)
+#   fasta          REF_FASTA of the genome include (checked by the preflight)
+#   contig_style   chr | nochr: the contig names of the FASTA. Every BED of the
+#                  project must use the same style.
+#   default_exome_bed   EXOME_BED of the genome include (TARGETS_FILE when
+#                  seq_type is WES)
+#   wgs_targets_file    targets_file written for seq_type WGS (lab practice:
+#                  a whole-genome BED, which also sets CHROMOSOMES)
+#   wgs_call_intervals_bed  call_intervals_bed written for seq_type WGS
+#                  (chunking BED for mutect, mutect2, scalpel, lancet)
+#   ann_pathogen   default of ann_pathogen (pathogenicity annotation is
+#                  supported for b37/hg19 only)
+#   notes          shown in SETUP_NOTES.md for every seq_type
+#   wgs_notes      shown in SETUP_NOTES.md for seq_type WGS only
+#
+# Paths checked on lilac 2026-11-24 (ls -la, read only).
+
+b37:
+  species: human
+  fasta: ~/share/reference/b37_dmp/b37.fasta
+  contig_style: nochr
+  default_exome_bed: ~/share/reference/target_panels/sure_select_exome_v4_b37.bed
+  wgs_targets_file: ~/share/reference/target_panels/whole_genome_1indexed_nochr_scalpel.bed
+  wgs_call_intervals_bed: null
+  ann_pathogen: true
+  notes: []
+  wgs_notes:
+    - "targets_file whole_genome_1indexed_nochr_scalpel.bed (3.1 Mb chunks, contigs 1..22 X Y MT) is the BED of the WGS_CDH1SV project. The I-SceI WGS project used whole_genome_0indexed_nochr.bed, whose mitochondrion is named 'M' (b37 names it 'MT')."
+
+hg19:
+  species: human
+  fasta: ~/share/reference/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
+  contig_style: chr
+  default_exome_bed: ~/share/reference/target_panels/sure_select_exome_v4_hg19.bed
+  wgs_targets_file: ~/share/reference/target_panels/whole_genome_0indexed_wchr.bed
+  wgs_call_intervals_bed: null
+  ann_pathogen: true
+  notes:
+    - "UCSC hg19 FASTA (chr-prefixed contigs, chrM first). Use b37 unless a collaborator's data or a custom FASTA needs hg19."
+    - "A custom FASTA (for example the I-SceI build, which has b37-style contig names) is set with --ref-fasta; then check the contig style of every BED against that FASTA."
+  wgs_notes: []
+
+hg38:
+  species: human
+  fasta: ~/share/reference/hg38_gatk_bundle/Homo_sapiens_assembly38.fasta
+  contig_style: chr
+  default_exome_bed: null
+  wgs_targets_file: null
+  wgs_call_intervals_bed: null
+  ann_pathogen: false
+  notes:
+    - "hg38 is not a tested build in this fork: no lab project on lilac uses it, and the FASTA named by genome_inc/hg38.inc does not exist on lilac (checked 2026-11-24)."
+  wgs_notes: []
+
+GRCm38:
+  species: mouse
+  fasta: ~/share/reference/Mus_musculus_GRCm38/Mus_musculus.GRCm38.71.dna.chromosome.genome.fa
+  contig_style: nochr
+  default_exome_bed: ~/share/reference/mus_musculus_known_genes_exons_GRCm38_noheader.bed
+  wgs_targets_file: null
+  wgs_call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed
+  ann_pathogen: false
+  notes:
+    - "Mouse GRCm38 / mm10, Ensembl 71 FASTA, contigs 1..19 X Y MT (no chr prefix)."
+  wgs_notes:
+    - "The WGS chunking BED (svaba region BED) names the mitochondrion 'M', the FASTA names it 'MT': chunks on 'M' find no reads."

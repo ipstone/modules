@@ -1,0 +1,125 @@
+---
+#! Template read by modules/scripts/setup_project.py. Do not copy this file by
+#! hand: run setup_project.py, which fills every <<placeholder>>. A key whose
+#! value is not used for the chosen case is written commented out, with an
+#! example value after the colon. Lines starting with '#!' are not copied.
+#! The generic default (copied by init_project) is default_yaml/project_config.yaml.
+# After every change to this file run `make config`, which converts it to
+# project_config.inc (scripts/configure.py upper-cases each key).
+# Guide: modules/_docs/new_project_setup.md
+<<header>>
+
+# ---------------------------------------------------------------- cluster
+# Scheduler: LSF (lilac), SLURM (iris), local (no scheduler).
+# See modules/_docs/cluster_backends.md
+cluster_engine: <<cluster_engine>>
+# false runs every job on the current host (testing only)
+use_cluster: <<use_cluster>>
+# Slurm only: site block of config.inc (database hosts, TMPDIR). No iris block
+# exists yet; add one first (cluster_backends.md section 3).
+site: <<site|msk_iris>>
+# default queue / partition, and extra arguments for every submission
+cluster_queue: <<cluster_queue|cpu>>
+cluster_extra_args: <<cluster_extra_args|--account=<account>>>
+
+# ---------------------------------------------------------------- genome
+# ref: b37 | hg19 | hg38 (human) or GRCm38 (mouse). genome_inc/<ref>.inc sets
+# the reference files and SPECIES (GRCm38 sets SPECIES = mouse).
+ref: <<ref>>
+# seq_type: WGS | WES | PANEL. Sets EXOME, Manta --exome and the resource
+# profile (config/profiles/). See modules/_docs/mouse_and_seq_type_config.md
+seq_type: <<seq_type>>
+# custom FASTA (for example the I-SceI hg19 build). All three are needed.
+ref_fasta: <<ref_fasta|/path/to/custom.fasta>>
+nochr_ref_fasta: <<nochr_ref_fasta|/path/to/custom.fasta>>
+chr_ref_fasta: <<chr_ref_fasta|/path/to/custom.fasta>>
+
+# ---------------------------------------------------------------- alignment and BAM processing
+aligner: <<aligner>>
+bam_chr1_base_recal: <<bam_chr1_base_recal>>
+# markdup (default, also for mouse) | rmdup | none
+bam_dup_type: <<bam_dup_type>>
+bam_no_filter: <<bam_no_filter>>
+# true skips BaseRecalibrator / PrintReads -BQSR
+bam_no_recal: <<bam_no_recal>>
+# true skips GATK IndelRealigner
+bam_no_realn: <<bam_no_realn>>
+bam_no_sort: <<bam_no_sort>>
+bam_fix_rg: <<bam_fix_rg>>
+bam_phred64: <<bam_phred64>>
+bam_reprocess: <<bam_reprocess>>
+merge_split_bams: <<merge_split_bams>>
+
+# ---------------------------------------------------------------- targets
+# targets_file: BED of the capture targets (PANEL: required) or, for WGS, the
+# whole-genome BED used by lab WGS projects. When targets_file is set and
+# seq_type is not WES, CHROMOSOMES is read from its first column.
+targets_file: <<targets_file|~/share/reference/target_panels/<panel>.bed>>
+# WES only: capture-kit BED when it is not the genome-include default
+# (b37: sure_select_exome_v4_b37.bed). TARGETS_FILE is then EXOME_BED.
+exome_bed: <<exome_bed|~/share/lib/bed_files/targets/<kit>/b37/<kit>_b37_targets.bed>>
+# Picard interval list for bam_metrics (CollectHsMetrics). Default when unset:
+# ~/share/lib/resource_files/MSK-IMPACT-v4.sorted.list (an older IMPACT).
+targets_list: <<targets_list|~/share/lib/bed_files/targets/<panel>/b37/<panel>_b37_targets.list>>
+# BED used to split the genome into chunks for mutect, mutect2, scalpel and
+# lancet. Default: targets_file. Set it when the chunking BED differs.
+call_intervals_bed: <<call_intervals_bed|/path/to/chunking.bed>>
+
+# ---------------------------------------------------------------- CNVkit (panels)
+# target and antitarget BEDs for `make cnv_kit`
+ontarget_file: <<ontarget_file|~/share/lib/bed_files/<panel>_b37_CNVkit_on-target.bed>>
+offtarget_file: <<offtarget_file|~/share/lib/bed_files/<panel>_b37_CNVkit_off-target.bed>>
+
+# ---------------------------------------------------------------- somatic SNVs and indels
+# mutect (MuTect 1, lab default) | mutect2 (tumor-only projects)
+snv_type: <<snv_type>>
+mutect_split_chr: <<mutect_split_chr>>
+mutect_use_contest: <<mutect_use_contest>>
+# indel callers; a call is kept when >= 2 callers find it.
+# choices: varscan_indels strelka_indels scalpel_indels lancet_indels
+#          platypus_indels pindel mutect_indels
+indel_types: <<indel_types>>
+# 1 = Strelka 1 (default) | 2 = Strelka2 from STRELKA_ENV
+strelka_version: <<strelka_version|2>>
+
+# ---------------------------------------------------------------- structural variants
+# SV callers are separate targets: <<sv_targets>>
+# svaba_tumor_normal: 1 = svaba 1.1.0 from SVABA_ENV (default) | 2 = svaba 2.0.0
+# Read modules/sv_callers/SVABA_SETUP_NOTES.md before using svaba 2.
+svaba_version: <<svaba_version|2>>
+svaba: <<svaba|/data/riazlab/lib/bin/svaba>>
+svaba_env: <<svaba_env|"">>
+
+# ---------------------------------------------------------------- VCF annotation
+ann_facets: <<ann_facets>>
+ann_mut_taste: <<ann_mut_taste>>
+ann_provean: <<ann_provean>>
+# pathogenicity annotation: human b37/hg19 only; must be false for mouse
+ann_pathogen: <<ann_pathogen>>
+vcf_post_ann_filter_expression: <<vcf_post_ann_filter_expression>>
+
+# ---------------------------------------------------------------- GATK
+gatk_hard_filter_snps: <<gatk_hard_filter_snps>>
+gatk_pool_snp_recal: <<gatk_pool_snp_recal>>
+
+# ---------------------------------------------------------------- FACETS
+# lab values: WGS 700 / 750 / 700, WES and panels 50 / 150 / 50, min_nhet 25
+# pre-processing critical value
+facets_pre_cval: <<facets_pre_cval>>
+# critical value for estimating the diploid log ratio
+facets_cval1: <<facets_cval1>>
+# starting critical value for segmentation
+facets_cval2: <<facets_cval2>>
+# min number of het SNPs in a segment used for the bivariate t-statistic
+facets_min_nhet: <<facets_min_nhet>>
+# union of gatk and dbsnp sites for snp-pileup
+facets_union_gatk_dbsnp: <<facets_union_gatk_dbsnp>>
+
+# ---------------------------------------------------------------- mouse only
+# BED of common SNP sites for cluster_samples. No mouse file exists on lilac.
+dbsnp_subset: <<dbsnp_subset|/path/to/mouse_common_snp_sites.bed>>
+
+# ---------------------------------------------------------------- misc
+slack_channel: <<slack_channel|<channel>>>
+qsub_priority: <<qsub_priority>>
+...
