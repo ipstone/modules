@@ -1,5 +1,4 @@
 import os
-import drmaa
 import time
 import collections
 import qsub_pbs
@@ -64,15 +63,25 @@ class ProveanQuery:
                 raise Exception('max attempts to retrieve fasta')
 
     def run_cluster(self, session=None, cluster_mode='SGE', mem_per_thread='1.5G'):
-        import qsub
         sys.stderr.write('running provean on the cluster...\n')
         job = None
-        if cluster_mode.lower() == 'pbs':
+        if cluster_mode.lower() in ('lsf', 'slurm'):
+            # submit through the scheduler backends of job.py (no DRMAA needed)
+            import job as job_backends
+            opts = job_backends.JobOptions(engine=cluster_mode, num_cores=self.num_threads,
+                                           soft_memory=mem_per_thread, hard_memory=mem_per_thread,
+                                           walltime='12:00:00', shell='/bin/bash',
+                                           log_file=self.out_file + '.log')
+            backend = job_backends.get_backend(cluster_mode)
+            job = backend.make_job("#!/bin/bash\nset -o pipefail; " + self._cmd, opts)
+            job.run_job()
+        elif cluster_mode.lower() == 'pbs':
             mem = qsub_pbs.human2bytes(mem_per_thread) * self.num_threads
             job = qsub_pbs.Job(self._cmd, '-l nodes=1:ppn={} -l walltime=12:00:00 '
                                '-l mem={}'.format(self.num_threads, mem))
             job.run_job()
         elif cluster_mode.lower() == 'sge':
+            import qsub
             assert session is not None
             job = qsub.Job(session=session, job_script=self._cmd,
                            qsub_args='-pe smp {} -l h_vmem={}'.format(self.num_threads, mem_per_thread))
@@ -92,8 +101,8 @@ class ProveanQuery:
     def process(self, max_retry=10):
         for attempt in range(max_retry):
             try:
-                assert os.stat(self._out_file).st_size > 0
-                df = pd.read_table(self._out_file)
+                assert os.stat(self.out_file).st_size > 0
+                df = pd.read_table(self.out_file)
                 assert len(df) > 0
                 df.columns = ['hgvsp', 'score']
                 return min(df['score'])
@@ -119,6 +128,7 @@ class ProveanQueryManager:
         provean_queries = self._create_queries()
         session = None
         if self.cluster_mode.lower() == 'sge':
+            import drmaa
             session = drmaa.Session()
             session.initialize()
         jobs = []
