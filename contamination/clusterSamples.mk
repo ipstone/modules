@@ -7,7 +7,10 @@ VPATH ?= bam
 ifeq ($(EXOME),true)
 DBSNP_SUBSET ?= $(HOME)/share/reference/dbsnp_137_exome.bed
 else
-DBSNP_SUBSET = $(HOME)/share/reference/dbsnp_tseq_intersect.bed
+DBSNP_SUBSET ?= $(HOME)/share/reference/dbsnp_tseq_intersect.bed
+endif
+ifeq ($(strip $(DBSNP_SUBSET)),)
+$(error DBSNP_SUBSET (BED of common SNP sites) is not set for REF=$(REF); see genome_inc/$(REF).inc)
 endif
 
 CLUSTER_VCF = modules/contamination/clusterSampleVcf.R
