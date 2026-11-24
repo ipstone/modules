@@ -150,6 +150,8 @@ endif
 , := ,
 empty :=
 space := $(empty) $(empty)
+# $( ) must expand to one space: BAM_SUFFIX (aligners/align.inc) and 13 other rules use $(subst $( ),.,...)
+$(space) := $(space)
 
 strip-suffix = $(firstword $(subst ., ,$(1)))
 

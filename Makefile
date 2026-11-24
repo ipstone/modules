@@ -334,6 +334,12 @@ oncofuse :
 # DNA structural variant callers
 #==================================================	
 
+# Kept from the fork: upstream removed this target; manta_tumor_only does not write the
+# candidateSmallIndels or SnpEff-annotated tumorSV VCFs that manta.mk produces.
+TARGETS += manta
+manta :
+	$(call RUN_MAKE,modules/sv_callers/manta.mk)
+
 TARGETS += manta_tumor_normal
 manta_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/manta_tumor_normal.mk)
