@@ -4,17 +4,21 @@ suppressPackageStartupMessages(library("optparse"))
 suppressPackageStartupMessages(library("dplyr"))
 suppressPackageStartupMessages(library("magrittr"))
 suppressPackageStartupMessages(library("readr"))
-suppressPackageStartupMessages(library("BSgenome.Hsapiens.UCSC.hg19"))
 
 if (!interactive()) {
     options(warn = -1, error = quote({ traceback(); q('no', status = 1) }))
 }
 
-args_list <- list(make_option("--input_file", default = NA, type = 'character', help = "file name and path"))
+args_list <- list(make_option("--input_file", default = NA, type = 'character', help = "file name and path"),
+				  make_option("--bsgenome", default = "BSgenome.Hsapiens.UCSC.hg19", type = 'character',
+							  help = "BSgenome package of the reference (UCSC chr-prefixed names)"))
 				  
 parser <- OptionParser(usage = "%prog", option_list = args_list)
 arguments <- parse_args(parser, positional_arguments = T)
 opt <- arguments$options
+
+suppressPackageStartupMessages(library(opt$bsgenome, character.only = TRUE))
+ref_genome = get(opt$bsgenome)
 
 all_vars = read_tsv(file=opt$input_file, col_types = cols(.default = col_character())) %>%
 		   type_convert()
@@ -56,7 +60,7 @@ deln4_count = all_vars %>%
 			  
 'getSeqFrom' <- function(chr, start, end)
 {
-	ret = as.character(getSeq(x=BSgenome.Hsapiens.UCSC.hg19, names=chr, start=start, end=end, strand="+", as.character=TRUE))
+	ret = as.character(getSeq(x=ref_genome, names=chr, start=start, end=end, strand="+", as.character=TRUE))
 	return(invisible(ret))
 }
 

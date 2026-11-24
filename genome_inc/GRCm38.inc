@@ -48,6 +48,10 @@ SVABA_REGION ?= $(SVABA_BLACKLIST)
 # EXOME_BED_NOHEADER) and set DBSNP_SUBSET in the project config.
 DBSNP_SUBSET ?=
 
+# summary/delmh_summary.mk: BSgenome package for the reference sequence.
+# Not installed in jrflab-modules-0.1.4 on lilac (checked 2026-11-24).
+DELMH_BSGENOME ?= BSgenome.Mmusculus.UCSC.mm10
+
 # no mouse hotspot VCFs: hotspot genotyping and hotspot summary tables are off
 NO_HOTSPOTS ?= true
 
