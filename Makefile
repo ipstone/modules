@@ -287,6 +287,10 @@ snp6 :
 TARGETS += cnv_kit
 cnv_kit :
 	$(call RUN_MAKE,modules/copy_number/cnvkit.mk)
+	
+TARGETS += qdna_seq
+qdna_seq :
+	$(call RUN_MAKE,modules/copy_number/qdnaseq.mk)
 
 
 #==================================================
@@ -344,9 +348,17 @@ TARGETS += gridss_tumor_normal
 gridss_tumor_normal :
 	$(call RUN_MAKE,modules/sv_callers/gridss_tumor_normal.mk)
 	
-TARGETS += manta
-manta :
-	$(call RUN_MAKE,modules/sv_callers/manta.mk)
+TARGETS += manta_tumor_only
+manta_tumor_only :
+	$(call RUN_MAKE,modules/sv_callers/manta_tumor_only.mk)
+	
+TARGETS += svaba_tumor_only
+svaba_tumor_only :
+	$(call RUN_MAKE,modules/sv_callers/svaba_tumor_only.mk)
+	
+TARGETS += gridss_tumor_only
+gridss_tumor_only :
+	$(call RUN_MAKE,modules/sv_callers/gridss_tumor_only.mk)
 
 TARGETS += brass
 brass :
@@ -596,6 +608,9 @@ TARGETS += medicc2
 medicc2 :
 	$(call RUN_MAKE,modules/copy_number/medicc2.mk)
 
+TARGETS += mixcr
+mixcr :
+	$(call RUN_MAKE,modules/sv_callers/mixcr_tumor_normal.mk)
 
 #==================================================
 # reports
