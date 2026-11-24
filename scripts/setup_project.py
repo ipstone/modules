@@ -722,12 +722,17 @@ def preflight(config, ref_preset, args, project_dir):
 def checklist(args, config, ref, ref_preset, panel, entries, samples):
     items = []
     seq_type = args.seq_type
-    items.append("Check the tumor/normal pairs in `samples.yaml` ({} patients, {} samples).".format(
-        len(entries), len(samples)))
+    if samples:
+        items.append("Check the tumor/normal pairs in `samples.yaml` ({} patients, {} samples).".format(
+            len(entries), len(samples)))
+    else:
+        items.append("Write `samples.yaml` (and `sample.fastq.yaml` for FASTQ input): run setup_project.py "
+                     "again with --sample-sheet, --fastq-dir or --bam-dir and --force, or write them by hand.")
     if seq_type == 'WGS':
         items.append("WGS chunking: `targets_file` = `{}` and `call_intervals_bed` = `{}`. Lab human WGS "
                      "projects set the whole-genome BED as targets_file; mouse WGS sets call_intervals_bed "
-                     "only.".format(config['targets_file'], config['call_intervals_bed'] or '(targets_file)'))
+                     "only.".format(config['targets_file'] or '(not set)',
+                                    config['call_intervals_bed'] or '(targets_file)'))
         items.append("FACETS critical values {}/{}/{} (pre_cval/cval1/cval2), min_nhet {}. These are the lab "
                      "WGS values. Earlier WGS projects used other values: WGS_CDH1SV 2050/2150/2050, I-SceI "
                      "WGS 650/750/650. Decide before the first `make facets`.".format(
@@ -742,6 +747,8 @@ def checklist(args, config, ref, ref_preset, panel, entries, samples):
                      "kit use `--panel <kit>` or `--targets-file`.".format(kit))
         items.append("`QUALIMAP_TARGETS_FILE` and `EMU_TARGETS_FILE` stay the SureSelect 50 Mb BEDs of the "
                      "genome include, whatever the kit.")
+        if config['targets_list']:
+            items.append("`targets_list` = `{}` (CollectHsMetrics in bam_metrics).".format(config['targets_list']))
     if seq_type == 'PANEL':
         items.append("Panel BED: `targets_file` = `{}`. Confirm the panel version with IGO/CMO (IMPACT341, "
                      "410, 468 and 505 differ).".format(config['targets_file']))
@@ -774,8 +781,9 @@ def checklist(args, config, ref, ref_preset, panel, entries, samples):
         items.append("Mouse: GRIDSS runs without the human blacklist and PON.")
         if seq_type == 'WGS':
             items.append("Mouse WGS: `bam_no_realn: true` and `bam_no_recal: true` skip GATK realignment and "
-                         "BQSR (as the mouse WGS projects ran); set them false to use the MGP v5 known sites. "
-                         "`strelka_version: 2`.")
+                         "BQSR, and `strelka_version: 2` runs Strelka2, as in the mouse WGS example of "
+                         "mouse_and_seq_type_config.md. Set the two bam keys to false to realign and recalibrate "
+                         "with the MGP v5 known sites.")
         if seq_type == 'WES':
             items.append("Mouse WES: targets are the known-gene exon BED of genome_inc/GRCm38.inc, not a "
                          "capture-kit BED. No mouse kit BED was found on lilac. For a kit BED use "
@@ -815,7 +823,11 @@ def notes_text(args, config, ref, ref_preset, panel, entries, samples, messages,
     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
     lines.append("# Setup notes: {}".format(os.path.basename(os.path.abspath(project_dir))))
     lines.append("")
-    lines.append("Written by `modules/scripts/setup_project.py` on {} (host {}).".format(now, socket.gethostname()))
+    if args.example:
+        lines.append("Example written by `modules/scripts/setup_project.py` (`_docs/examples/make_examples.sh`).")
+    else:
+        lines.append("Written by `modules/scripts/setup_project.py` on {} (host {}).".format(
+            now, socket.gethostname()))
     lines.append("Command: `{}`".format(command_line))
     lines.append("Guide: `modules/_docs/new_project_setup.md`")
     lines.append("")
@@ -838,14 +850,15 @@ def notes_text(args, config, ref, ref_preset, panel, entries, samples, messages,
     for item in checklist(args, config, ref, ref_preset, panel, entries, samples):
         lines.append("- [ ] " + item)
     lines.append("")
-    if messages['notes'] or messages['warnings']:
-        lines.append("## 2. Sample set-up messages")
-        lines.append("")
-        for note in messages['notes']:
-            lines.append("- " + note)
-        for warn in messages['warnings']:
-            lines.append("- WARNING: " + warn)
-        lines.append("")
+    lines.append("## 2. Sample set-up messages")
+    lines.append("")
+    if not (messages['notes'] or messages['warnings']):
+        lines.append("None.")
+    for note in messages['notes']:
+        lines.append("- " + note)
+    for warn in messages['warnings']:
+        lines.append("- WARNING: " + warn)
+    lines.append("")
     lines.append("## 3. Preflight")
     lines.append("")
     if results is None:
@@ -863,7 +876,7 @@ def notes_text(args, config, ref, ref_preset, panel, entries, samples, messages,
     lines.append("")
     sv_targets = ' '.join(SV_CALLER_TARGETS[c] for c in args.sv_callers)
     lines.append("```bash")
-    lines.append("cd {}".format(os.path.abspath(project_dir)))
+    lines.append("cd {}".format('<project>' if args.example else os.path.abspath(project_dir)))
     lines.append("source ~/share/usr/anaconda-envs/jrflab-modules-0.1.4/bin/activate   # configure.py needs PyYAML")
     lines.append("make config                      # writes project_config.inc; re-run after every yaml change")
     lines.append("make -n somatic_variants | grep -c run.py   # dry run: count the jobs it would submit")
@@ -877,8 +890,10 @@ def notes_text(args, config, ref, ref_preset, panel, entries, samples, messages,
     lines.append("D=~/.ipdot/skills/lilac-genomics-make-driver/scripts/jrflab_make_driver.sh")
     if input_kind.startswith('FASTQ'):
         lines.append("$D bwamem                         # 1. alignment (FASTQ input)")
-    else:
+    elif samples:
         lines.append("# BAMs are linked into bam/: no alignment step")
+    else:
+        lines.append("$D bwamem                         # 1. alignment (FASTQ input; skip when BAMs are in bam/)")
     wave1 = ['somatic_variants', 'facets'] + [SV_CALLER_TARGETS[c] for c in args.sv_callers]
     if args.seq_type == 'WGS':
         wave1.insert(0, 'wgs_metrics')
@@ -955,6 +970,8 @@ def parse_args(argv):
                              '(old files are kept as *.bak.<time>)')
     parser.add_argument('--dry-run', action='store_true', help='print what would be written; write nothing')
     parser.add_argument('--list-panels', action='store_true', help='list the panel and exome-kit presets')
+    # used by _docs/examples/make_examples.sh: no date, host, paths or preflight
+    parser.add_argument('--example', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if args.list_panels:
         return args
@@ -1049,7 +1066,14 @@ def main(argv=None):
         list_panels()
         return 0
     project_dir = os.path.abspath(expand(args.project_dir))
-    command_line = 'python modules/scripts/setup_project.py ' + ' '.join(argv)
+    shown_argv = list(argv)
+    if args.example:
+        args.no_preflight = True
+        shown_argv = [a for a in argv if a != '--example']
+        if '--project-dir' in shown_argv:
+            i = shown_argv.index('--project-dir')
+            del shown_argv[i:i + 2]
+    command_line = 'python modules/scripts/setup_project.py ' + ' '.join(shown_argv)
     messages = {'errors': [], 'warnings': [], 'notes': []}
     try:
         ref, ref_preset, panel = resolve_presets(args)
@@ -1104,12 +1128,14 @@ def main(argv=None):
     plan = Plan(args.dry_run, args.force)
     if args.link_modules and not os.path.lexists(os.path.join(project_dir, 'modules')):
         plan.symlink(MODULES_DIR, os.path.join(project_dir, 'modules'))
-    plan.write(os.path.join(project_dir, 'Makefile'), 'include modules/Makefile\n', only_if_absent=True)
-    plan.copy(os.path.join(MODULES_DIR, 'default_yaml', 'summary_config.yaml'),
-              os.path.join(project_dir, 'summary_config.yaml'))
+    if not args.example:
+        plan.write(os.path.join(project_dir, 'Makefile'), 'include modules/Makefile\n', only_if_absent=True)
+        plan.copy(os.path.join(MODULES_DIR, 'default_yaml', 'summary_config.yaml'),
+                  os.path.join(project_dir, 'summary_config.yaml'))
 
     sv_targets = ' '.join(SV_CALLER_TARGETS[c] for c in args.sv_callers)
-    header = ['# Written by setup_project.py on {}:'.format(datetime.date.today().isoformat()),
+    header = ['# Written by setup_project.py{}:'.format(
+        '' if args.example else ' on ' + datetime.date.today().isoformat()),
               '#   ' + command_line,
               '# Case: species {}, ref {}, seq_type {}{}. Checklist: SETUP_NOTES.md'.format(
                   args.species, ref, args.seq_type, ', panel ' + panel['name'] if panel else '')]
