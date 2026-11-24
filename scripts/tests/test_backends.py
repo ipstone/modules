@@ -122,7 +122,7 @@ CORES = [1, 2, 4, 8, 16]
 
 
 def test_equivalence():
-    pwd = '/data/riazlab/projects/x'
+    pwd = '/work/projects/x'
     grid = itertools.product(['lsf', 'LSF', 'Lsf', 'sge', 'SGE', 'pbs', 'PBS'],
                              [False, True],          # local
                              [False, True],          # internet
