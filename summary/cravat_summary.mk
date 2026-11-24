@@ -1,4 +1,5 @@
 include modules/Makefile.inc
+$(call require-human,cravat_summary)
 
 LOGDIR ?= log/cravat_summary.$(NOW)
 PHONY += cravat summary summary/tsv

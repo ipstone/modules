@@ -1,5 +1,4 @@
 include modules/Makefile.inc
-include modules/genome_inc/b37.inc
 
 LOGDIR ?= log/annotate_smry_maf.$(NOW)
 

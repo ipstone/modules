@@ -17,5 +17,8 @@ ANNOVAR_REF = hg38
 ERICSCRIPT_DB = $(REF_DIR)/ericscript_db_hg38_84
 ERICSCRIPT_SPECIES = homo_sapiens
 
+# genome build name passed to cravat -l
+CRAVAT_GENOME ?= hg38
+
 endif
 HG38_INC = true

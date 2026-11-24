@@ -1,4 +1,8 @@
 include modules/Makefile.inc
+$(call require-human,cravat_annotation)
+ifeq ($(strip $(CRAVAT_GENOME)),)
+$(error CRAVAT_GENOME (cravat -l) is not set for REF=$(REF); set it in the genome include or project config)
+endif
 
 LOGDIR ?= log/cravat_annotate.$(NOW)
 CRAVAT_FILTER_MEM ?= 48G
@@ -39,7 +43,7 @@ cravat/$1.tsv: cravat/$1.cravat.vcf
 							  -d cravat \
 							  -a clinvar cosmic dbsnp gnomad hgvs \
 							  -v \
-							  -l hg19 \
+							  -l $(CRAVAT_GENOME) \
 							  -t text")
 						    
 cravat/$1.txt : cravat/$1.tsv

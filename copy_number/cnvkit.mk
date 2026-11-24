@@ -1,5 +1,4 @@
 include modules/Makefile.inc
-include modules/genome_inc/b37.inc
 
 LOGDIR ?= log/cnv_kit.$(NOW)
 

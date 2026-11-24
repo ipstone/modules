@@ -8,9 +8,8 @@ GRIDSS_HARD_MEM ?= 10G
 GRIDSS_QUEUE ?= cpuqueue
 GRIDSS_WALLTIME ?= 168:00:00
 GRIDSS_CORE_ULIMIT ?= 0
-# GRIDSS_REF ?= $(HOME)/share/lib/ref_files/b37/human_g1k_v37.fasta
-# GRIDSS_REF ?= $(REF_FASTA)
-GRIDSS_REF ?= /data/riazlab/lib/reference/b37_dmp/b37.fasta
+# genome includes may set GRIDSS_REF (b37.inc does); otherwise use REF_FASTA
+GRIDSS_REF ?= $(REF_FASTA)
 GRIDSS_BLACKLIST ?= $(HOME)/share/lib/resource_files/gridss/example/ENCFF001TDO.bed
 GRIDSS ?= gridss
 GRIDSS_FILTER ?= gridss_somatic_filter

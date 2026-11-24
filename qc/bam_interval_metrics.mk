@@ -26,8 +26,12 @@ COLLECT_OXOG_METRICS = $(PICARD) -Xmx$(PICARD_MEM) CollectOxoGMetrics $(PICAD_OP
 COLLECT_GC_BIAS = $(PICARD) -Xmx$(PICARD_MEM) CollectGcBiasMetrics $(PICAD_OPTS)
 BAM_INDEX = $(PICARD) -Xmx$(PICARD_MEM) BamIndexStats $(PICAD_OPTS)
 
-BAITS_LIST = $(HOME)/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_baits.list
-TARGETS_LIST ?= $(HOME)/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_targets.list
+# Picard interval lists; the genome include gives the defaults (b37: IMPACT505)
+BAITS_LIST ?= $(INTERVAL_METRICS_BAITS_LIST)
+TARGETS_LIST ?= $(INTERVAL_METRICS_TARGETS_LIST)
+ifeq ($(and $(strip $(BAITS_LIST)),$(strip $(TARGETS_LIST))),)
+$(error bam_interval_metrics needs BAITS_LIST and TARGETS_LIST (Picard interval lists) for REF=$(REF))
+endif
 	      
 define idx-metrics
 metrics/$1.idx_stats.txt : bam/$1.bam

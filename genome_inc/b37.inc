@@ -124,6 +124,16 @@ ONCOTATOR_TX_OVERRIDES = $(REF_DIR)/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.tx
 
 CMO_HOTSPOT_FILE = $(REF_DIR)/hotspot_list.txt
 
+# genome build name passed to cravat -l
+CRAVAT_GENOME ?= hg19
+
+# GRIDSS needs its own copy of the FASTA (it writes index files beside it)
+GRIDSS_REF ?= /data/riazlab/lib/reference/b37_dmp/b37.fasta
+
+# default bait/target interval lists for qc/bam_interval_metrics.mk (IMPACT505)
+INTERVAL_METRICS_BAITS_LIST ?= $(HOME)/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_baits.list
+INTERVAL_METRICS_TARGETS_LIST ?= $(HOME)/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_targets.list
+
 VEP_REF = GRCh37
 VEP_DATA = $(REF_DIR)/vep/v86
 VEP_OVERRIDES = $(REF_DIR)/isoform_overrides_at_mskcc

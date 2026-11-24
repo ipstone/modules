@@ -40,14 +40,17 @@ EXAC_NONTCGA ?= $(REF_DIR)/ExAC.r0.3.nonTCGA.sites.vep.2.hg19.vcf.gz
 COSMIC ?= $(REF_DIR)/cosmic_v82/CosmicCodingMuts.hg19.vcf.gz
 COSMIC_NONCODING ?= $(REF_DIR)/cosmic_v82/CosmicNonCodingVariants.hg19.vcf.gz
 
-#REF_FASTA ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
-REF_FASTA ?= /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
-#NOCHR_REF_FASTA ?= $(REF_DIR)/GATK_bundle/2.3/human_g1k_v37.fasta
-NOCHR_REF_FASTA ?= /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
-#CHR_REF_FASTA ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
-CHR_REF_FASTA ?= /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
+# Standard hg19 references. A project with a custom hg19 build overrides
+# these in project_config.yaml, for example the I-SceI palindrome project:
+#   ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
+#   nochr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
+#   chr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
+# (see _docs/mouse_and_seq_type_config.md)
+REF_FASTA ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
+NOCHR_REF_FASTA ?= $(REF_DIR)/GATK_bundle/2.3/human_g1k_v37.fasta
+CHR_REF_FASTA ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/ucsc.hg19.fasta
 DBSNP ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/dbsnp_138.hg19.vcf.gz
-KNOWN_INDELS ?= /data/riazlab/reference/ucsc_gatk_bundle_2.8/Mills_and_1000G_gold_standard.indels.hg19.vcf.gz
+KNOWN_INDELS ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/Mills_and_1000G_gold_standard.indels.hg19.vcf.gz
 OMNI ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/1000G_omni2.5.hg19.vcf.gz
 HAPMAP ?= $(REF_DIR)/ucsc_gatk_bundle_2.8/hapmap_3.3.hg19.vcf.gz
 EXOME_BED ?= $(REF_DIR)/target_panels/sure_select_exome_v4_hg19.bed
@@ -112,6 +115,9 @@ ONCOTATOR_DB = $(REF_DIR)/oncotator_v1_ds_April052016/
 ONCOTATOR_TX_OVERRIDES = $(REF_DIR)/tx_exact_uniprot_matches.AKT1_CRLF2_FGFR1.txt
 
 CMO_HOTSPOT_FILE = $(REF_DIR)/hotspot_list.txt
+
+# genome build name passed to cravat -l
+CRAVAT_GENOME ?= hg19
 
 VEP_REF = GRCh37
 VEP_DATA = $(REF_DIR)/vep/v86
