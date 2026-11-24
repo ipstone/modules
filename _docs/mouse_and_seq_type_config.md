@@ -13,6 +13,9 @@
 
     This replaces the branches `mouse_wes` and `mouse_wgs`.
 
+    To set up a new project for any of these cases, use
+    `scripts/setup_project.py` (guide: `_docs/new_project_setup.md`).
+
 ## What each setting changes
 
 | Setting | EXOME | TARGETS_FILE | Manta `--exome` | Resource profile | Strelka2 `--exome` |
@@ -129,12 +132,16 @@ facets_cval2: 700
 
 ## Custom hg19 build (I-SceI palindrome project)
     `genome_inc/hg19.inc` now points to the standard UCSC hg19 FASTA. The
-    I-SceI project sets its own FASTA in project_config.yaml:
+    I-SceI project sets its own FASTA in project_config.yaml. The project
+    used `hg19_Iscel_w_vector.fasta` (its modules/genome_inc/hg19.inc,
+    checked 2026-11-24); `hg19_IScel_palindrom.fasta`, named here before,
+    does not exist on lilac. The FASTA has b37-style contig names (`1`, not
+    `chr1`), so its BEDs must have no `chr` prefix.
 ```
 ref: hg19
-ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
-nochr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
-chr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_IScel_palindrom.fasta
+ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_Iscel_w_vector.fasta
+nochr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_Iscel_w_vector.fasta
+chr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_Iscel_w_vector.fasta
 ```
 
 # Output

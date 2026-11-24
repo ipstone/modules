@@ -30,6 +30,23 @@ git checkout mouse
 ./init_project
 ```
 
+## New project setup (start here)
+
+`scripts/setup_project.py` sets up a project for human or mouse, WGS, WES or
+panel sequencing: project_config.yaml from presets, samples.yaml and
+sample.fastq.yaml from a FASTQ folder, a BAM folder or a sample sheet, name and
+file checks, preflight checks, and a SETUP_NOTES.md checklist.
+
+```bash
+python modules/scripts/setup_project.py --species human --seq-type PANEL --panel IMPACT505 \
+    --sample-sheet samples.tsv --dry-run
+```
+
+Guide: [_docs/new_project_setup.md](_docs/new_project_setup.md). Examples per
+case: [_docs/examples/](_docs/examples/). The branch-based set-up below is
+older: mouse and seq_type now live on one branch
+([_docs/mouse_and_seq_type_config.md](_docs/mouse_and_seq_type_config.md)).
+
 ## Project Initialization
 
 After cloning, initialize a new project:

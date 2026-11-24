@@ -22,8 +22,8 @@ bam_phred64: false
 bam_reprocess: false
 
 # false for FASTQ input: true makes `make bwamem` stop with "No rule to make
-# target 'unprocessed_bam/<sample>.bam'" (checked on lilac, 2026-11-24). The lab
-# projects on lilac do not set it (default false).
+# target 'unprocessed_bam/<sample>.bam'" with make 3.82 (lilac default; checked
+# 2026-11-24). The lab projects on lilac do not set it (default false).
 merge_split_bams: false
 
 snv_type: mutect # or mutect_snps
