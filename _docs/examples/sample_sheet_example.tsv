@@ -1,0 +1,8 @@
+sample	type	patient	path
+# one row per FASTQ lane (R1 file; R2 is found by name), per FASTQ folder, or one BAM per sample
+PT01-T	T	PT01	/path/to/Sample_PT01_T_IGO_12345_1/PT01_T_IGO_12345_1_S1_L001_R1_001.fastq.gz
+PT01-T	T	PT01	/path/to/Sample_PT01_T_IGO_12345_1/PT01_T_IGO_12345_1_S1_L002_R1_001.fastq.gz
+PT01-N	N	PT01	/path/to/Sample_PT01_N_IGO_12345_2
+PT02-T1	T	PT02	/path/to/bams/PT02-T1.bam
+PT02-T2	T	PT02	/path/to/bams/PT02-T2.bam
+PT02-N	N	PT02	/path/to/bams/PT02-N.bam

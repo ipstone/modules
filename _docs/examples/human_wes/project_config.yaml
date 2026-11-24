@@ -1,0 +1,125 @@
+---
+# After every change to this file run `make config`, which converts it to
+# project_config.inc (scripts/configure.py upper-cases each key).
+# Guide: modules/_docs/new_project_setup.md
+# Written by setup_project.py:
+#   python modules/scripts/setup_project.py --species human --seq-type WES --panel xgen_exome_v2 --config-only
+# Case: species human, ref b37, seq_type WES, panel xgen_exome_v2. Checklist: SETUP_NOTES.md
+
+# ---------------------------------------------------------------- cluster
+# Scheduler: LSF (lilac), SLURM (iris), local (no scheduler).
+# See modules/_docs/cluster_backends.md
+cluster_engine: LSF
+# false runs every job on the current host (testing only)
+use_cluster: true
+# Slurm only: site block of config.inc (database hosts, TMPDIR). No iris block
+# exists yet; add one first (cluster_backends.md section 3).
+# site: msk_iris
+# default queue / partition, and extra arguments for every submission
+# cluster_queue: cpu
+# cluster_extra_args: --account=<account>
+
+# ---------------------------------------------------------------- genome
+# ref: b37 | hg19 | hg38 (human) or GRCm38 (mouse). genome_inc/<ref>.inc sets
+# the reference files and SPECIES (GRCm38 sets SPECIES = mouse).
+ref: b37
+# seq_type: WGS | WES | PANEL. Sets EXOME, Manta --exome and the resource
+# profile (config/profiles/). See modules/_docs/mouse_and_seq_type_config.md
+seq_type: WES
+# custom FASTA (for example the I-SceI hg19 build). All three are needed.
+# ref_fasta: /path/to/custom.fasta
+# nochr_ref_fasta: /path/to/custom.fasta
+# chr_ref_fasta: /path/to/custom.fasta
+
+# ---------------------------------------------------------------- alignment and BAM processing
+aligner: bwamem
+bam_chr1_base_recal: true
+# markdup (default, also for mouse) | rmdup | none
+bam_dup_type: markdup
+bam_no_filter: false
+# true skips BaseRecalibrator / PrintReads -BQSR
+bam_no_recal: false
+# true skips GATK IndelRealigner
+bam_no_realn: false
+bam_no_sort: false
+bam_fix_rg: false
+bam_phred64: false
+bam_reprocess: false
+# false for FASTQ input. true makes bam/<sample>.bam depend on
+# unprocessed_bam/<sample>.bam, and `make bwamem` then stops with "No rule to
+# make target 'unprocessed_bam/<sample>.bam'" (checked on lilac, 2026-11-24).
+merge_split_bams: false
+
+# ---------------------------------------------------------------- targets
+# targets_file: BED of the capture targets (PANEL: required) or, for WGS, the
+# whole-genome BED used by lab WGS projects. When targets_file is set and
+# seq_type is not WES, CHROMOSOMES is read from its first column.
+# targets_file: ~/share/reference/target_panels/<panel>.bed
+# WES only: capture-kit BED when it is not the genome-include default
+# (b37: sure_select_exome_v4_b37.bed). TARGETS_FILE is then EXOME_BED.
+exome_bed: ~/share/lib/bed_files/targets/IDT_Exome_xGen_v2/b37/IDT_Exome_xGen_v2_b37_targets.bed
+# Picard interval list for bam_metrics (CollectHsMetrics). Default when unset:
+# ~/share/lib/resource_files/MSK-IMPACT-v4.sorted.list (an older IMPACT).
+targets_list: ~/share/lib/bed_files/targets/IDT_Exome_xGen_v2/b37/IDT_Exome_xGen_v2_b37_targets.list
+# BED used to split the genome into chunks for mutect, mutect2, scalpel and
+# lancet. Default: targets_file. Set it when the chunking BED differs.
+# call_intervals_bed: /path/to/chunking.bed
+
+# ---------------------------------------------------------------- CNVkit (panels)
+# target and antitarget BEDs for `make cnv_kit`
+# ontarget_file: ~/share/lib/bed_files/<panel>_b37_CNVkit_on-target.bed
+# offtarget_file: ~/share/lib/bed_files/<panel>_b37_CNVkit_off-target.bed
+
+# ---------------------------------------------------------------- somatic SNVs and indels
+# mutect (MuTect 1, lab default) | mutect2 (tumor-only projects)
+snv_type: mutect
+mutect_split_chr: true
+mutect_use_contest: false
+# indel callers; a call is kept when >= 2 callers find it.
+# choices: varscan_indels strelka_indels scalpel_indels lancet_indels
+#          platypus_indels pindel mutect_indels
+indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+# 1 = Strelka 1 (default) | 2 = Strelka2 from STRELKA_ENV
+# strelka_version: 2
+
+# ---------------------------------------------------------------- structural variants
+# SV callers are separate targets: manta_tumor_normal
+# svaba_tumor_normal: 1 = svaba 1.1.0 from SVABA_ENV (default) | 2 = svaba 2.0.0
+# Read modules/sv_callers/SVABA_SETUP_NOTES.md before using svaba 2.
+# svaba_version: 2
+# svaba: /data/riazlab/lib/bin/svaba
+# svaba_env: ""
+
+# ---------------------------------------------------------------- VCF annotation
+ann_facets: true
+ann_mut_taste: false
+ann_provean: false
+# pathogenicity annotation: human b37/hg19 only; must be false for mouse
+ann_pathogen: true
+vcf_post_ann_filter_expression: ExAC_AF > 0.01
+
+# ---------------------------------------------------------------- GATK
+gatk_hard_filter_snps: true
+gatk_pool_snp_recal: false
+
+# ---------------------------------------------------------------- FACETS
+# lab values: WGS 700 / 750 / 700, WES and panels 50 / 150 / 50, min_nhet 25
+# pre-processing critical value
+facets_pre_cval: 50
+# critical value for estimating the diploid log ratio
+facets_cval1: 150
+# starting critical value for segmentation
+facets_cval2: 50
+# min number of het SNPs in a segment used for the bivariate t-statistic
+facets_min_nhet: 25
+# union of gatk and dbsnp sites for snp-pileup
+facets_union_gatk_dbsnp: false
+
+# ---------------------------------------------------------------- mouse only
+# BED of common SNP sites for cluster_samples. No mouse file exists on lilac.
+# dbsnp_subset: /path/to/mouse_common_snp_sites.bed
+
+# ---------------------------------------------------------------- misc
+# slack_channel: <channel>
+qsub_priority: 0
+...
