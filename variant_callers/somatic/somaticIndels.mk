@@ -11,6 +11,8 @@ somatic_indels : $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).somatic_indels.vcf)
 UPS_INDEL_DIR = $(HOME)/share/usr/ups-indel
 UPS_INDEL = if [ ! -f ext/SnpSift.jar ]; then mkdir -p ext; ln -fs $(UPS_INDEL_DIR)/ext/SnpSift.jar ext/SnpSift.jar; fi ; LD_LIBRARY_PATH=$(UPS_INDEL_DIR):$(HOME)/share/usr/lib $(UPS_INDEL_DIR)/ups_indel
 UPS_SPLIT_CHR ?= true
+# ups_indel can write ';'-prefixed rows into the .uvcf; they are removed
+# before merge_uvcf_vcf.py reads the file
 MERGE_UVCF_VCF = python modules/vcf_tools/merge_uvcf_vcf.py
 MERGE_INDEL_VCF = python modules/vcf_tools/merge_indel_vcf.py
 
@@ -34,10 +36,12 @@ uvcf/%.uvcf : $(foreach chr,$(CHROMOSOMES),chr_uvcf/%.$(chr).uvcf)
 	$(INIT) h=`find $^ -size +1 | head -n1`; \
 		if [[ ! -z $$h ]]; then \
 		(grep -s '^#' $$h; grep -P '^CHROM\t' $$h; \
-		for x in $^; do grep -v '^#' $$x || true; done) > $@; else touch $@; fi
+		for x in $^; do grep -v '^#' $$x || true; done) > $@; \
+		if [[ -s $@ ]]; then sed -i '/^;/d' $@; fi; else touch $@; fi
 else
 uvcf/%.uvcf : vcf/%.vcf
 	$(call RUN,-s 4G -m 12G -c,"$(UPS_INDEL) $(REF_FASTA) $< $(@D)/$*")
+	if [[ -s $@ ]]; then sed -i '/^;/d' $@; fi
 endif
 
 vcf/%.uvcf.vcf : vcf/%.vcf uvcf/%.uvcf
