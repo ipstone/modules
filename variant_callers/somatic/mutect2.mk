@@ -29,8 +29,9 @@ SPLIT_BED = python modules/scripts/split_bed.py
 NUM_MUTECT2_CHUNKS = 50
 MUTECT2_CHUNKS = $(shell seq -f "%03g" $(NUM_MUTECT2_CHUNKS))
 
-ifdef TARGETS_FILE
-mutect2/interval_chunk/chunk.timestamp : $(TARGETS_FILE)
+# chunk on CALL_INTERVALS_BED (config/seq_type.inc; defaults to TARGETS_FILE)
+ifneq ($(strip $(CALL_INTERVALS_BED)),)
+mutect2/interval_chunk/chunk.timestamp : $(CALL_INTERVALS_BED)
 	$(INIT) $(SPLIT_BED) --out_prefix $(@D)/chunk --num_chunks $(NUM_MUTECT2_CHUNKS) $<  && touch $@
 else
 genome_sliding_window.bed : $(REF_DICT)

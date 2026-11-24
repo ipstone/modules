@@ -33,7 +33,7 @@ scalpel_vcfs : $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).scalpel_indels.vcf)
 #scalpel_mafs : $(foreach pair,$(SAMPLE_PAIR),maf/$(pair).scalpel_indels.maf)
 
 ifeq ($(SCALPEL_TARGET_ONLY),true)
-scalpel/interval_chunk/chunk.timestamp : $(TARGETS_FILE)
+scalpel/interval_chunk/chunk.timestamp : $(CALL_INTERVALS_BED)
 	$(INIT) $(SPLIT_BED) --out_prefix $(@D)/chunk --num_chunks $(NUM_SCALPEL_CHUNKS) $<  && touch $@
 #else
 #scalpel_genome_sliding_window.bed : $(REF_DICT)

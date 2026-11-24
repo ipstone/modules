@@ -34,7 +34,7 @@ lancet : lancet_vcfs
 lancet_vcfs : $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).lancet_indels.vcf)
 
 ifeq ($(LANCET_TARGET_ONLY),true)
-lancet/interval_chunk/chunk.timestamp : $(TARGETS_FILE)
+lancet/interval_chunk/chunk.timestamp : $(CALL_INTERVALS_BED)
 	$(INIT) $(SPLIT_BED) --out_prefix $(@D)/chunk --num_chunks $(NUM_LANCET_CHUNKS) $<  && touch $@
 
 define lancet-interval-chunk
