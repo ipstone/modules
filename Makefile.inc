@@ -81,7 +81,8 @@ ALL_SAMPLES = $(SAMPLE_PAIRS) $(SAMPLES)
 
 SHELL = /bin/bash
 
-export TMPDIR := $(HOME)/share/data/$(USER)/tmp
+# SITE_TMPDIR is set per site in config.inc; it must be shared with the compute nodes
+export TMPDIR := $(or $(SITE_TMPDIR),$(HOME)/share/data/$(USER)/tmp)
 
 PICARD_MEM = 20G
 PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=8000000
@@ -189,13 +190,25 @@ RUN_FIRST = umask $(UMASK); $(if $(and $(findstring true,$(USE_CLUSTER)),$(JOBS)
 INIT = $(RUN_FIRST); $(call ACTIVATE_ENV,$(JRFLAB_MODULES_ENV)); umask $(UMASK); set -o pipefail;
 INIT_ENV = $(RUN_FIRST); $(call ACTIVATE_ENV,$1); umask $(UMASK); set -o pipefail;
 
+### Scheduler (see _docs/cluster_backends.md)
+# CLUSTER_ENGINE: lsf, slurm, sge, pbs or local (case-insensitive in run.py)
 CLUSTER_ENGINE ?= SGE
 USE_CLUSTER ?= true
+# default queue/partition; a -q given in a rule's RUN call takes precedence
+CLUSTER_QUEUE ?=
+# appended to every submission, e.g. --account=x --qos=y (slurm) or -P x (lsf)
+CLUSTER_EXTRA_ARGS ?=
+# slurm only: arguments that select a node with internet access; without
+# them jobs that request --internet run on the submit host
+CLUSTER_INTERNET_ARGS ?=
 
+CLUSTER_RUN_OPTS = $(strip $(if $(CLUSTER_QUEUE),-q $(CLUSTER_QUEUE)) \
+		   $(if $(CLUSTER_EXTRA_ARGS),--extra_args='$(CLUSTER_EXTRA_ARGS)') \
+		   $(if $(CLUSTER_INTERNET_ARGS),--internet_args='$(CLUSTER_INTERNET_ARGS)'))
 RUN_OPTS = $(if $(findstring false,$(USE_CLUSTER)),-l) -o $@ $(if $(CLUSTER_ENGINE),-g $(CLUSTER_ENGINE)) \
 		   --default_env $(JRFLAB_MODULES_ENV) -S $(SHELL) \
 		   --log_file $(LOG) $(if $($(CLUSTER_ENGINE)_NODES),--servers $($(CLUSTER_ENGINE)_NODES)) \
-		   $(if $(PROJECT_NAME),-p $(PROJECT_NAME))
+		   $(if $(PROJECT_NAME),-p $(PROJECT_NAME))$(if $(CLUSTER_RUN_OPTS), $(CLUSTER_RUN_OPTS))
 RUN = echo $2 | python modules/scripts/run.py $(RUN_OPTS) $1
 
 MD5 = md5sum $(@:.md5=) > $@
@@ -232,15 +245,16 @@ define R_INIT
 dir.create('$(@D)', showWarnings = F, recursive = T)
 qw <- function(x) unlist(strsplit(x, "[[:space:]]+"))
 endef
+# DRMAA is used by the SGE backend (drmaa_job.py) and the SGE path of
+# provean_query.py. The LSF and PBS values are kept so that the job
+# environment on those sites does not change; slurm and local set nothing.
 ifeq ($(USE_CLUSTER),true)
-ifeq ($(CLUSTER_ENGINE),SGE)
+ifneq ($(filter SGE sge,$(CLUSTER_ENGINE)),)
 export DRMAA_LIBRARY_PATH = /common/sge/lib/lx24-amd64/libdrmaa.so.1.0
-else
-ifeq ($(CLUSTER_ENGINE),LSF)
+else ifneq ($(filter LSF lsf,$(CLUSTER_ENGINE)),)
 export DRMAA_LIBRARY_PATH = /admin/lsf/10.1/linux3.10-glibc2.17-x86_64/lib/libdrmaa.so
-else
+else ifneq ($(filter PBS pbs,$(CLUSTER_ENGINE)),)
 export DRMAA_LIBRARY_PATH = /opt/torque/lib/libdrmaa.so.1
-endif
 endif
 endif
 

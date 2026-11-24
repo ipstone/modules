@@ -109,31 +109,48 @@ GATK_JAR2 ?= $(JARDIR)/GenomeAnalysisTK-3.7.jar
 VT ?= $(HOME)/share/usr/bin/vt
 TABIX ?= $(HOME)/share/usr/bin/tabix
 
+## Site and scheduler (see modules/_docs/cluster_backends.md)
+# SITE selects the values that differ between installations (database hosts,
+# shared temp dir). Set it in project_config.inc; when unset it is derived from
+# CLUSTER_ENGINE so that older project configs keep their previous hosts.
 CLUSTER_ENGINE ?= SGE
-ifeq ($(CLUSTER_ENGINE),PBS)
-MYSQLDB_HOST = cpu-6-2
-EMBL_MYSQLDB_HOST = cpu-6-2
-EMBL_MYSQLDB_PORT = 9992
-EMBL_MYSQLDB_USER = embl
-EMBL_MYSQLDB_PW = embl
-EMBL_MYSQLDB_DB = homo_sapiens_core_85_37
+ifndef SITE
+ifneq ($(filter PBS pbs,$(CLUSTER_ENGINE)),)
+SITE = legacy_pbs
+else ifneq ($(filter SGE sge,$(CLUSTER_ENGINE)),)
+SITE = legacy_sge
+else
+SITE = msk_lilac
 endif
-ifeq ($(CLUSTER_ENGINE),LSF)
-MYSQLDB_HOST = swan
-EMBL_MYSQLDB_HOST = swan
-EMBL_MYSQLDB_PORT = 38493
-EMBL_MYSQLDB_USER = embl
-EMBL_MYSQLDB_PW = embl
-EMBL_MYSQLDB_DB = homo_sapiens_core_75_37
 endif
-ifeq ($(CLUSTER_ENGINE),SGE)
-MYSQLDB_HOST = ika
-EMBL_MYSQLDB_HOST = ika
-EMBL_MYSQLDB_PORT = 38493
-EMBL_MYSQLDB_USER = embl
-EMBL_MYSQLDB_PW = embl
-EMBL_MYSQLDB_DB = homo_sapiens_core_75_37
+
+ifeq ($(SITE),msk_lilac)
+MYSQLDB_HOST ?= swan
+EMBL_MYSQLDB_HOST ?= swan
+EMBL_MYSQLDB_PORT ?= 38493
+EMBL_MYSQLDB_USER ?= embl
+EMBL_MYSQLDB_PW ?= embl
+EMBL_MYSQLDB_DB ?= homo_sapiens_core_75_37
 endif
+ifeq ($(SITE),legacy_pbs)
+MYSQLDB_HOST ?= cpu-6-2
+EMBL_MYSQLDB_HOST ?= cpu-6-2
+EMBL_MYSQLDB_PORT ?= 9992
+EMBL_MYSQLDB_USER ?= embl
+EMBL_MYSQLDB_PW ?= embl
+EMBL_MYSQLDB_DB ?= homo_sapiens_core_85_37
+endif
+ifeq ($(SITE),legacy_sge)
+MYSQLDB_HOST ?= ika
+EMBL_MYSQLDB_HOST ?= ika
+EMBL_MYSQLDB_PORT ?= 38493
+EMBL_MYSQLDB_USER ?= embl
+EMBL_MYSQLDB_PW ?= embl
+EMBL_MYSQLDB_DB ?= homo_sapiens_core_75_37
+endif
+# add a new site as another ifeq ($(SITE),<name>) block above
+# TMPDIR for job scripts and java; must be on a file system the compute nodes see
+SITE_TMPDIR ?= $(HOME)/share/data/$(USER)/tmp
 SNVBOX_CONF = $(PWD)/modules/db/snv_box-$(MYSQLDB_HOST).conf
 FATHMM_CONF = $(PWD)/modules/db/fathmm_config-$(MYSQLDB_HOST).ini
 
