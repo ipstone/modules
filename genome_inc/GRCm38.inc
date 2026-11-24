@@ -55,8 +55,8 @@ DELMH_BSGENOME ?= BSgenome.Mmusculus.UCSC.mm10
 # no mouse hotspot VCFs: hotspot genotyping and hotspot summary tables are off
 NO_HOTSPOTS ?= true
 
-EXOME_BED = $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38.bed
-EXOME_BED_NOHEADER = $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38_noheader.bed
+EXOME_BED ?= $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38.bed
+EXOME_BED_NOHEADER ?= $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38_noheader.bed
 
 FREEC_REF := $(REF_DIR)/Mus_musculus_GRCm38/freec
 CHR_LEN = $(REF_DIR)/Mus_musculus_GRCm38/mm10.len
