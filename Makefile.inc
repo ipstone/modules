@@ -11,7 +11,16 @@ endif
 
 # default reference: 
 REF ?= b37
+# SEQ_TYPE (WGS | WES | PANEL) sets EXOME and the resource profile; it must
+# come before the genome include, which reads EXOME
+include modules/config/seq_type.inc
 include modules/genome_inc/$(REF).inc
+
+# genome includes of non-human references set SPECIES (GRCm38.inc: mouse)
+SPECIES ?= human
+# $(call require-human,<tool>) stops with an explicit error for tools that
+# only have human resources (MSI, HRD scores, hotspots, CRAVAT)
+require-human = $(if $(filter-out human,$(SPECIES)),$(error $1 is a human-only tool and cannot run with REF=$(REF) (SPECIES=$(SPECIES))))
 
 ifndef MAKEFILE_INC
 
@@ -83,8 +92,8 @@ SHELL = /bin/bash
 
 export TMPDIR := $(HOME)/share/data/$(USER)/tmp
 
-PICARD_MEM = 20G
-PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=8000000
+# PICARD_MEM and PICARD_MAX_RECORDS_IN_RAM come from config/profiles/<wgs|wes>.inc
+PICARD_OPTS = VALIDATION_STRINGENCY=LENIENT MAX_RECORDS_IN_RAM=$(PICARD_MAX_RECORDS_IN_RAM)
 PICARD_DIR ?= $(HOME)/share/usr/lib/java
 
 ANALYZE_COV = $(JAVA) -Xmx$(PICARD_MEM) -jar $(PICARD_DIR)/AnalyzeCovariates.jar $(PICARD_OPTS)
