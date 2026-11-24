@@ -43,8 +43,12 @@ ifneq ($(strip $(CALL_INTERVALS_BED)),)
 mutect/interval_chunk/chunk.timestamp : $(CALL_INTERVALS_BED)
 	$(INIT) $(SPLIT_BED) --out_prefix $(@D)/chunk --num_chunks $(NUM_MUTECT_CHUNKS) $<  && touch $@
 else
+# mutect.mk and mutect2.mk share this rule; define it once (no override warning)
+ifndef GENOME_SLIDING_WINDOW_RULE
+GENOME_SLIDING_WINDOW_RULE = true
 genome_sliding_window.bed : $(REF_DICT)
 	$(INIT) bedtools makewindows -g <('s/.*SN:\([^\s]\+\)\sLN:\([0-9]\+\).*/\1\t\2/' $<) -w 10000 -s 9900 > $@
+endif
 mutect/interval_chunk/chunk.timestamp : genome_sliding_window.bed
 	$(INIT) $(SPLIT_BED) --out_prefix $(@D)/chunk $(NUM_MUTECT_CHUNKS) $<  && touch $@
 endif
