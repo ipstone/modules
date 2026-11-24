@@ -3,7 +3,12 @@ cluster_engine: LSF ## PBS ## SGE
 
 use_cluster: true
 
-ref: hg19
+ref: b37 ## hg19 ## hg38 ## GRCm38 (mouse)
+
+# sequencing type: WGS, WES or PANEL. Sets EXOME, Manta --exome and the
+# resource profile (config/profiles/). Leave unset only for old projects.
+# See modules/_docs/mouse_and_seq_type_config.md
+seq_type: WGS ## WES ## PANEL
 
 aligner: bwamem ## tophat ## hisat ## bwa ## bowtie ## tmap
 bam_chr1_base_recal: true
@@ -31,8 +36,12 @@ ann_mut_taste: false
 ann_provean: false
 ann_pathogen: true
 
-# target panels
-targets_file: ~/share/reference/target_panels/whole_genome_1indexed_nochr_scalpel.bed
+# target panels: BED of the capture targets. For seq_type WES the genome
+# include sets it to the exome BED; for PANEL set it to the panel BED.
+# The placeholder below is a directory: replace it with a BED file or delete it.
+targets_file: ~/share/reference/target_panels/
+# WGS example used by lab WGS projects (whole-genome BED, for chunking):
+# targets_file: ~/share/reference/target_panels/whole_genome_1indexed_nochr_scalpel.bed
 
 # gatk options
 gatk_hard_filter_snps: true
@@ -49,6 +58,10 @@ facets_cval2: 50
 facets_min_nhet: 25
 # union of gatk and dbsnp for snp-pileup
 facets_union_gatk_dbsnp: false
+# WGS example used by lab WGS projects:
+# facets_pre_cval: 700
+# facets_cval1: 750
+# facets_cval2: 700
 
 # slack_channel: 
 
