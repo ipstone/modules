@@ -1,3 +1,6 @@
+DEPRECATED (2026-11-24): use modules/scripts/setup_project.py --fastq-dir instead.
+See modules/_docs/new_project_setup.md, section 'Old setup scripts'.
+
 This folder contains the Makefile to generate :
       _samples.yaml
       _sample.fastq.yaml

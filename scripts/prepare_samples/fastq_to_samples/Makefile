@@ -1,3 +1,5 @@
+# DEPRECATED (2026-11-24): use scripts/setup_project.py --fastq-dir instead. Kept for old projects;
+# reasons and decisions: _docs/new_project_setup.md, section 'Old setup scripts'.
 # To generate samples.yaml and sample.fastq.yaml though the list of fastq
 # files
 #

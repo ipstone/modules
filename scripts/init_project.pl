@@ -22,3 +22,8 @@ unless (-e "project_config.yaml") {
 unless (-e "summary_config.yaml") {
     copy("modules/default_yaml/summary_config.yaml", "summary_config.yaml") or die "Unable to create summary_config.yaml: $!";
 }
+
+print "Copied the generic project_config.yaml. For a guided set-up (presets for species,\n";
+print "seq_type and panel, samples.yaml, preflight checks, SETUP_NOTES.md) run:\n";
+print "  python modules/scripts/setup_project.py --help\n";
+print "Guide: modules/_docs/new_project_setup.md\n";

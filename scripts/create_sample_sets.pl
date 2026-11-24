@@ -1,4 +1,6 @@
 #!/usr/bin/env perl
+# DEPRECATED (2026-11-24): use scripts/setup_project.py --sample-sheet instead. Kept for old projects;
+# reasons and decisions: _docs/new_project_setup.md, section 'Old setup scripts'.
 
 use strict;
 use warnings;

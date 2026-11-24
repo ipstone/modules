@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# DEPRECATED (2026-11-24): use scripts/setup_project.py --fastq-dir instead. Kept for old projects;
+# reasons and decisions: _docs/new_project_setup.md, section 'Old setup scripts'.
 
 # Use the input files list, to generate the samples.yaml
 
