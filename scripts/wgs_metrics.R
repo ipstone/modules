@@ -7,7 +7,8 @@ suppressPackageStartupMessages(library("magrittr"))
 
 select_existing = function(data, cols) {
     existing_cols = setdiff(colnames(data), cols)
-    dplyr::select(data, dplyr::all_of(existing_cols))
+    # base subsetting: the pinned env has dplyr 0.7.4, which has no all_of()
+    data[, existing_cols, drop = FALSE]
 }
 
 combine_metrics = function(metrics) {
