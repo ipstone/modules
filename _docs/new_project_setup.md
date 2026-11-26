@@ -359,8 +359,19 @@ for t in wgs_metrics somatic_variants facets manta_tumor_normal svaba_tumor_norm
     Before `seq_type` existed, Manta ran with `--exome` whenever
     `targets_file` was set. Lab WGS projects set the whole-genome BED as
     `targets_file` (it sets the chromosomes and the calling chunks), so their
-    Manta runs used exome mode. In exome mode Manta does not apply its
-    high-depth filters (Manta user guide). New projects with `seq_type: WGS`
+    Manta runs used exome mode. In Manta 0.29.6, `--exome` sets
+    `isHighDepthFilter = False` (lib/python/mantaWorkflow.py:584). Manta
+    then skips the chromosome-depth step and runs the locus graph and
+    candidate generation without `--chrom-depth`. Two filters are lost: the
+    removal of evidence from regions of very high depth while the SV graph
+    is built, and the `MaxDepth` VCF filter ("Normal sample site depth is
+    greater than 3x the median chromosome depth near one or both variant
+    breakends"). More calls therefore pass. Same pairs run in both modes
+    (30gy, 2019; 7 FFPE pairs of broad_batch2 with the same BAM paths):
+    382 PASS somatic SVs with `--exome` against 266 without (+44%; INV 195
+    against 123, BND 48 against 24). 8 frozen-tumour pairs
+    (branch_1/igo_realigned_calls; BAM paths differ between the runs): 490
+    against 487. New projects with `seq_type: WGS`
     run Manta without `--exome`, so their SV calls are not directly
     comparable with these older calls.
 
