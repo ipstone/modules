@@ -71,4 +71,4 @@ GRCm38:
   notes:
     - "Mouse GRCm38 / mm10, Ensembl 71 FASTA, contigs 1..19 X Y MT (no chr prefix)."
   wgs_notes:
-    - "The WGS chunking BED (svaba region BED) names the mitochondrion 'M', the FASTA names it 'MT': chunks on 'M' find no reads."
+    - "The WGS chunking BED is the svaba region BED with the mitochondrion renamed from 'M' to 'MT' (the FASTA name); the original file, which uses 'M', is unchanged next to it."

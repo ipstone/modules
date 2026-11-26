@@ -51,7 +51,7 @@ IMPACT468:
   ref: b37
   species: human
   description: "MSK-IMPACT 468 genes"
-  targets_file: ~/share/reference/target_panels/impact468.bed
+  targets_file: ~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.bed
   targets_list: ~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.list
   ontarget_file: ~/share/lib/bed_files/IMPACT468_b37_CNVkit_on-target.bed
   offtarget_file: ~/share/lib/bed_files/IMPACT468_b37_CNVkit_off-target.bed
@@ -59,10 +59,10 @@ IMPACT468:
   source_projects:
     - /data/riazlab/projects/peix/parejaf/Fresia_Project_17318/run_pipelines (impact468.bed)
   alternatives:
-    - "~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.bed: 6,585 gene-named regions, 1.31 Mb, no chrY. impact468.bed has 7,845 regions, 1.52 Mb, including chrY."
+    - "~/share/reference/target_panels/impact468.bed: 7,845 regions, 1.52 Mb, including chrY (used by Fresia 17318). The targets BED has 6,585 gene-named regions, 1.31 Mb, no chrY."
     - "~/share/reference/target_panels/MSK-IMPACT-468_CNVkit_ontarget.bed / _offtarget.bed: older CNVkit BEDs (2019)."
   notes:
-    - "The preset keeps impact468.bed because the Fresia 17318 project used it."
+    - "The preset uses the targets BED (2026-11-26), as all 4 Reis-Filho lab IMPACT468 projects do. To match Fresia 17318, give --targets-file ~/share/reference/target_panels/impact468.bed."
 
 IMPACT410:
   kind: panel

@@ -6,9 +6,12 @@ use_cluster: true
 ref: b37 ## hg19 ## hg38 ## GRCm38 (mouse)
 
 # sequencing type: WGS, WES or PANEL. Sets EXOME, Manta --exome and the
-# resource profile (config/profiles/). Leave unset only for old projects.
+# resource profile (config/profiles/). It is empty on purpose: set it for
+# every new project (make prints a warning while it is unset). The FACETS
+# values below (50/150/50) suit WES and panels; WGS uses 700/750/700.
+# scripts/setup_project.py writes a complete config for each case.
 # See modules/_docs/mouse_and_seq_type_config.md
-seq_type: WGS ## WES ## PANEL
+seq_type: ## WGS ## WES ## PANEL
 
 aligner: bwamem ## tophat ## hisat ## bwa ## bowtie ## tmap
 bam_chr1_base_recal: true
@@ -29,7 +32,8 @@ merge_split_bams: false
 snv_type: mutect # or mutect_snps
 mutect_split_chr: true
 mutect_use_contest: false
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels #pindel mutect_indels to use mutect2
+# lancet_indels is off by default (slow: 24 h for one human chromosome); add it if needed
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels #lancet_indels pindel mutect_indels to use mutect2
 
 vcf_post_ann_filter_expression: ExAC_AF > 0.01
 

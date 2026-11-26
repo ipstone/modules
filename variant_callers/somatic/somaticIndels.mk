@@ -3,7 +3,9 @@
 include modules/Makefile.inc
 LOGDIR ?= log/somatic_indels.$(NOW)
 
-INDEL_TYPES ?= varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels pindel #mutect_indels
+# Fallback for projects without indel_types; same as default_yaml/project_config.yaml
+# (lancet and pindel are off by default since 2026-11-26).
+INDEL_TYPES ?= varscan_indels strelka_indels scalpel_indels platypus_indels #lancet_indels pindel mutect_indels
 
 .PHONY : somatic_indels
 somatic_indels : $(foreach pair,$(SAMPLE_PAIRS),vcf/$(pair).somatic_indels.vcf)

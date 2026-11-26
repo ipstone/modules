@@ -23,14 +23,15 @@
 | `seq_type: WGS` | false | project value (optional) | no | `config/profiles/wgs.inc` | no |
 | `seq_type: WES` | true | `EXOME_BED` of the genome include | yes | `config/profiles/wes.inc` | yes |
 | `seq_type: PANEL` | false | project value, required (stops with an error if empty) | yes | `config/profiles/wes.inc` | yes |
-| `seq_type` unset (old projects) | as configured | as configured | yes only if TARGETS_FILE is set (old rule) | `config/profiles/wgs.inc` | no |
+| `seq_type` unset (old projects; make prints a warning) | as configured | as configured | yes only if TARGETS_FILE is set (old rule; lab WGS projects that set the whole-genome BED ran Manta in exome mode) | `config/profiles/wgs.inc` | no |
 
 | Setting | Effect |
 |---|---|
 | `ref: GRCm38` | mouse FASTA (Ensembl 71, contigs `1..19 X Y MT`, no `chr`), MGP v5 dbSNP, MGP indels as `KNOWN_INDELS`, mouse svaba dbSNP and region BED, mm10 gene BED for FACETS gene calls, `NO_HOTSPOTS = true`, `SPECIES = mouse` |
-| `SPECIES = mouse` | msisensor, mimsi, hotspot, hotspot_summary, hr_detect, cravat_annotate/cravat_summary stop with an explicit error; GRIDSS runs without the human blacklist and PON |
+| `SPECIES = mouse` | msisensor, mimsi, hotspot, hotspot_summary, hr_detect, cravat_annotate/cravat_summary stop with an explicit error; GRIDSS uses the mm10 blacklist (`GRIDSS_BLACKLIST`), a writable FASTA copy in /data/riazlab (`GRIDSS_REF_FASTA`) and no PON |
 | `call_intervals_bed` | BED used to split the genome into chunks for mutect, mutect2, scalpel and lancet. Default: `targets_file`. Set it when the chunking BED is not the capture BED (for example mouse WGS) |
 | `manta_exome: true/false` | forces Manta exome mode on or off |
+| `mutation_summary_include_all: true/false` | keep (default) or drop the LOW and MODIFIER calls in mutation_summary, for every seq_type |
 | `resource_profile: wgs/wes` | forces a resource profile independent of seq_type |
 | any `*_RESOURCES`, `*_THREADS`, `*_JAVA_MEM`, `PICARD_MEM` | overrides one value of the profile (all profile values are `?=`) |
 | `strelka_version: 2` | runs Strelka2 from `STRELKA_ENV` instead of Strelka 1 (default `1`) |
@@ -71,7 +72,7 @@ bam_dup_type: markdup
 # whole-genome BED, used for chunking (lab practice for WGS projects)
 targets_file: ~/share/reference/target_panels/whole_genome_1indexed_nochr_scalpel.bed
 snv_type: mutect
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels   # add lancet_indels if wanted (slow)
 ann_pathogen: true
 facets_pre_cval: 700
 facets_cval1: 750
@@ -86,7 +87,7 @@ aligner: bwamem
 bam_dup_type: markdup
 # no targets_file needed; for another capture kit set exome_bed: <kit BED>
 snv_type: mutect
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels   # add lancet_indels if wanted (slow)
 ann_pathogen: true
 facets_pre_cval: 50
 facets_cval1: 150
@@ -98,13 +99,14 @@ facets_cval2: 50
 ## Mouse WES (GRCm38)
 ```
 ref: GRCm38
-seq_type: WES           # TARGETS_FILE = mus_musculus_known_genes_exons_GRCm38_noheader.bed
+seq_type: WES           # TARGETS_FILE = EXOME_BED: the known-gene exon BED of GRCm38.inc,
+# exome_bed: <kit BED>  # or the capture-kit BED, when the kit is known (GRCm38 names, no chr)
 aligner: bwamem
 bam_dup_type: markdup
 bam_no_realn: false
 bam_no_recal: false
 snv_type: mutect
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels   # add lancet_indels if wanted (slow)
 ann_pathogen: false     # pathogenicity annotation is human-only (b37/hg19)
 facets_pre_cval: 50
 facets_cval1: 150
@@ -122,7 +124,7 @@ bam_no_recal: true      # optional: skip BQSR
 # whole genome minus gaps/blacklist, no chr prefix; used only for chunking
 call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed
 snv_type: mutect
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels   # add lancet_indels if wanted (slow)
 strelka_version: 2      # Strelka2, as the mouse WGS projects used
 ann_pathogen: false
 facets_pre_cval: 700
@@ -165,7 +167,10 @@ chr_ref_fasta: /data/riazlab/reference/hg19_IScel/hg19_Iscel_w_vector.fasta
       installed in the default R environment (jrflab-modules-0.1.4).
     - `CENTROMERE_TABLE` (`centromere_mm10.txt`) is the UCSC gap table with
       `chr` names, the same format as the human `centromere.txt`.
-    - `gridss_somatic_filter` runs without a PON and with its default `--ref`.
+    - `gridss_somatic_filter` runs without a PON.
+    - GRIDSS writes index files next to its FASTA, so it uses the copy in
+      `/data/riazlab/lib/reference/Mus_musculus_GRCm38/` (`GRIDSS_REF_FASTA`);
+      the shared `~/share/reference` copy is not writable for us.
 
 # Post-processing
 

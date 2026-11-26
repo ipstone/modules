@@ -6,6 +6,11 @@ ifneq ("$(wildcard project_config.inc)", "")
 endif
 include modules/config.inc
 
+# Warn once per make call when seq_type is unset (old projects keep the old rules).
+ifeq ($(strip $(filter-out None none null,$(SEQ_TYPE))),)
+$(warning seq_type is not set in project_config.yaml: Manta $(if $(TARGETS_FILE),adds,does not add) --exome (old rule: --exome whenever targets_file is set). Set seq_type: WGS, WES or PANEL; see modules/_docs/mouse_and_seq_type_config.md)
+endif
+
 export
 
 NUM_ATTEMPTS ?= 10

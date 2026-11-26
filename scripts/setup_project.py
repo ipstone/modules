@@ -58,7 +58,10 @@ SV_CALLER_TARGETS = {
 }
 INDEL_CALLERS = ('varscan_indels', 'strelka_indels', 'scalpel_indels', 'lancet_indels',
                  'platypus_indels', 'pindel', 'mutect_indels')
-LAB_INDEL_CALLERS = 'varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels'
+# Lancet is off by default (2026-11-26): left out by 16 of 27 Reis-Filho lab projects and
+# by 6 of 7 recent WGS projects; it ran 24 h on one human chromosome. Add it with
+# --indel-callers ... lancet_indels.
+LAB_INDEL_CALLERS = 'varscan_indels strelka_indels scalpel_indels platypus_indels'
 FACETS_WGS = {'pre_cval': 700, 'cval1': 750, 'cval2': 700, 'min_nhet': 25}
 FACETS_TARGETED = {'pre_cval': 50, 'cval1': 150, 'cval2': 50, 'min_nhet': 25}
 HUMAN_ONLY_TARGETS = 'msisensor, mimsi, hotspot, hotspot_summary, hr_detect, cravat_annotate, cravat_summary'
@@ -778,16 +781,20 @@ def checklist(args, config, ref, ref_preset, panel, entries, samples):
                      "lilac yet.")
         items.append("Mouse: `delmh_summary` needs BSgenome.Mmusculus.UCSC.mm10, which is not installed in "
                      "jrflab-modules-0.1.4.")
-        items.append("Mouse: GRIDSS runs without the human blacklist and PON.")
+        items.append("Mouse: GRIDSS uses the mm10 blacklist and the riazlab FASTA copy (GRIDSS_REF_FASTA), without a PON.")
         if seq_type == 'WGS':
             items.append("Mouse WGS: `bam_no_realn: true` and `bam_no_recal: true` skip GATK realignment and "
                          "BQSR, and `strelka_version: 2` runs Strelka2, as in the mouse WGS example of "
                          "mouse_and_seq_type_config.md. Set the two bam keys to false to realign and recalibrate "
                          "with the MGP v5 known sites.")
         if seq_type == 'WES':
-            items.append("Mouse WES: targets are the known-gene exon BED of genome_inc/GRCm38.inc, not a "
-                         "capture-kit BED. No mouse kit BED was found on lilac. For a kit BED use "
-                         "`--seq-type PANEL --targets-file <kit BED>`.")
+            if config.get('exome_bed'):
+                items.append("Mouse WES: targets are the capture-kit BED `{}` (exome_bed). Check that it uses "
+                             "GRCm38 contig names without `chr` (1..19 X Y MT).".format(config['exome_bed']))
+            else:
+                items.append("Mouse WES: targets are the known-gene exon BED of genome_inc/GRCm38.inc, not a "
+                             "capture-kit BED. No mouse kit BED was found on lilac. If the kit is known, give "
+                             "`--targets-file <kit BED>` (written as exome_bed).")
     ref_notes = list(ref_preset.get('notes') or [])
     if seq_type == 'WGS':
         ref_notes += ref_preset.get('wgs_notes') or []

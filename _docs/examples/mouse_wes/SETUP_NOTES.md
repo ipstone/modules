@@ -15,7 +15,7 @@ Guide: `modules/_docs/new_project_setup.md`
 | samples | 0 (0 tumors, 0 normals) |
 | patients | 0 (0 with a normal) |
 | SV callers | manta |
-| indel callers | varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels |
+| indel callers | varscan_indels strelka_indels scalpel_indels platypus_indels |
 
 ## 1. Check or decide before the first run
 
@@ -28,8 +28,8 @@ Guide: `modules/_docs/new_project_setup.md`
 - [ ] Mouse: `ann_pathogen: false` (pathogenicity annotation is human-only).
 - [ ] Mouse: `cluster_samples` needs `dbsnp_subset` (a BED of common SNP sites); none exists on lilac yet.
 - [ ] Mouse: `delmh_summary` needs BSgenome.Mmusculus.UCSC.mm10, which is not installed in jrflab-modules-0.1.4.
-- [ ] Mouse: GRIDSS runs without the human blacklist and PON.
-- [ ] Mouse WES: targets are the known-gene exon BED of genome_inc/GRCm38.inc, not a capture-kit BED. No mouse kit BED was found on lilac. For a kit BED use `--seq-type PANEL --targets-file <kit BED>`.
+- [ ] Mouse: GRIDSS uses the mm10 blacklist and the riazlab FASTA copy (GRIDSS_REF_FASTA), without a PON.
+- [ ] Mouse WES: targets are the known-gene exon BED of genome_inc/GRCm38.inc, not a capture-kit BED. No mouse kit BED was found on lilac. If the kit is known, give `--targets-file <kit BED>` (written as exome_bed).
 - [ ] Reference GRCm38: Mouse GRCm38 / mm10, Ensembl 71 FASTA, contigs 1..19 X Y MT (no chr prefix).
 - [ ] Annotation: `ann_pathogen: false`, `vcf_post_ann_filter_expression: ExAC_AF > 0.01`.
 

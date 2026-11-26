@@ -97,7 +97,7 @@ python $S --species human --seq-type WGS --config-only
 | `--targets-file` | panel BED (PANEL), kit BED (WES), whole-genome BED (WGS) | preset |
 | `--call-intervals-bed` | chunking BED for mutect, mutect2, scalpel, lancet | preset (mouse WGS) |
 | `--sv-callers` | manta svaba gridss lumpy delly | WGS human: manta svaba gridss; WGS mouse: manta svaba; WES/PANEL: manta |
-| `--indel-callers` | varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels pindel mutect_indels | the first five (lab practice) |
+| `--indel-callers` | varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels pindel mutect_indels | varscan, strelka, scalpel, platypus (Lancet off since 2026-11-26) |
 | `--snv-type` | mutect, mutect2 | mutect |
 | `--svaba-version` | 1 (svaba 1.1.0), 2 (svaba 2.0.0) | 1 |
 | `--strelka-version` | 1, 2 | 1; 2 for mouse WGS |
@@ -169,15 +169,15 @@ PT02-N  N     PT02     /path/bams/PT02-N.bam
 ## 4. What each case sets
 
     Values written to project_config.yaml. All other keys are the lab
-    defaults (bwamem, markdup, MuTect 1, five indel callers, ann_facets).
+    defaults (bwamem, markdup, MuTect 1, four indel callers, ann_facets).
     Keys not used for the case are written commented out with an example.
 
 | Key | human WGS | human WES | human PANEL | mouse WES | mouse WGS |
 |---|---|---|---|---|---|
 | `ref` | b37 | b37 | b37 | GRCm38 | GRCm38 |
 | `seq_type` | WGS | WES | PANEL | WES | WGS |
-| `targets_file` | whole_genome_1indexed_nochr_scalpel.bed | (from EXOME_BED) | panel BED | (genome include) | not set |
-| `exome_bed` | - | kit BED if not the default | - | - | - |
+| `targets_file` | whole_genome_1indexed_nochr_scalpel.bed | (from EXOME_BED) | panel BED | (from EXOME_BED) | not set |
+| `exome_bed` | - | kit BED if not the default | - | kit BED if given (`--targets-file`) | - |
 | `targets_list` | - | kit list (preset) | panel list (preset) | - | - |
 | `call_intervals_bed` | (targets_file) | (targets_file) | (targets_file) | (targets_file) | mouse_mm10_removed_blacklist-region_no-chr.MT.bed |
 | `ontarget_file` / `offtarget_file` | - | - | CNVkit BEDs (preset) | - | - |
@@ -203,7 +203,7 @@ PT02-N  N     PT02     /path/bams/PT02-N.bam
 | Preset | Kind | targets BED | CNVkit BEDs | Used by |
 |---|---|---|---|---|
 | IMPACT505 | panel | `~/share/lib/bed_files/targets/IMPACT505/b37/IMPACT505_b37_targets.bed` | `~/share/lib/bed_files/IMPACT505_b37_CNVkit_{on,off}-target.bed` | late_mosaicism |
-| IMPACT468 | panel | `~/share/reference/target_panels/impact468.bed` | `~/share/lib/bed_files/IMPACT468_b37_CNVkit_{on,off}-target.bed` | Fresia 17318 |
+| IMPACT468 | panel | `~/share/lib/bed_files/targets/IMPACT468/b37/IMPACT468_b37_targets.bed` (since 2026-11-26; Fresia 17318 used `~/share/reference/target_panels/impact468.bed`) | `~/share/lib/bed_files/IMPACT468_b37_CNVkit_{on,off}-target.bed` | 4 Reis-Filho lab projects |
 | IMPACT410 | panel | `~/share/lib/bed_files/targets/IMPACT410/b37/IMPACT410_b37_targets.bed` | yes | - |
 | IMPACT341 | panel | `~/share/lib/bed_files/targets/IMPACT341/b37/IMPACT341_b37_targets.bed` | yes | - |
 | HemePACT_v4 | panel | `~/share/lib/bed_files/targets/HemePACT_v4/b37/HemePACT_v4_b37_targets.bed` | none | - |
@@ -291,9 +291,23 @@ for t in wgs_metrics somatic_variants facets manta_tumor_normal svaba_tumor_norm
     - The I-SceI "hg19" FASTA has b37-style contig names (`1`, not `chr1`):
       use no-`chr` BEDs with it. The hg19 default WGS BED of the preset is
       chr-prefixed, so give `--targets-file`.
-    - Mouse WES with a capture kit: genome_inc/GRCm38.inc sets TARGETS_FILE
-      with `=`, so `exome_bed` has no effect. Use `--seq-type PANEL
-      --targets-file <kit BED>`.
+    - Mouse WES with a capture kit: give `--targets-file <kit BED>`; it is
+      written as `exome_bed` and used as TARGETS_FILE (corrected 2026-11-26:
+      before, genome_inc/GRCm38.inc ignored `exome_bed`, and every mouse WES
+      project called on the genome-wide known-gene exon BED with no message).
+    - Manta `--exome`: with `seq_type` set, Manta uses `--exome` for WES and
+      PANEL only. Before `seq_type` existed, the rule was "`--exome` whenever
+      `targets_file` is set", and lab WGS projects set the whole-genome BED as
+      `targets_file`, so their Manta runs used exome mode (section 11).
+      Manta WGS calls of new projects are therefore not directly comparable
+      with those older runs. To reproduce an old run exactly, set
+      `manta_exome: true`.
+    - Lancet is off by default (2026-11-26). It took 24 h for one human
+      chromosome (chr16 of WGS_CDH1SV) in the lilac test. Add `lancet_indels`
+      to `indel_types` (or `--indel-callers`) when it is wanted.
+    - `seq_type` is empty in `default_yaml/project_config.yaml`; `make`
+      prints a warning while it is unset. Projects written by
+      setup_project.py always set it.
     - WES: QUALIMAP_TARGETS_FILE stays the SureSelect 50 Mb BED of the
       genome include, whatever the kit.
 
@@ -309,6 +323,80 @@ for t in wgs_metrics somatic_variants facets manta_tumor_normal svaba_tumor_norm
 | `scripts/convert_sample_txt2yaml.py` | keep | Correct for its input (old samples.txt / sample_sets.txt: tumors then the normal on one line). |
 | `scripts/prepare_samples/fastq_to_samples/` | deprecate (headers) | Assumes one lane (two FASTQ files) per sample, a fixed `rawdata/` layout and `-T`/`-N` names; writes `_samples.yaml`. Replaced by `--fastq-dir`. |
 | `scripts/create_iontorrent_sample_yaml.py`, `create_iontorrent_sample_merge_yaml.py` | keep (not tested) | Ion Torrent sample-map input, which setup_project.py does not cover. Python 2 only (`FileType('w', 0)`), needs glob2. |
+
+## 10. Cases tested on lilac (one small chromosome each)
+
+    Each test project was written by setup_project.py and run with the make
+    driver (skill `lilac-genomics-make-driver`). The data are soft links or
+    one-chromosome subsets; the folders are under
+    `/data/riazlab/lib/pipelines/modules/setups/`. "Completed" means the
+    target finished without error and its output files were opened and
+    counted; the calls were not compared with the full-genome results of
+    the source projects.
+
+| Case | Test folder | Data | Targets completed | Not run |
+|---|---|---|---|---|
+| human WGS, b37 | `human_wgs_b37_cdh1sv1` | WGS_CDH1SV, one pair, chr16 | somatic_variants (all callers except Lancet), facets, manta, manta_tumor_normal, svaba (v2), gridss, wgs_metrics | Lancet (stopped after 24 h; code unchanged) |
+| mouse WES, GRCm38 | `mouse_wes_grcm38_chr19` | Sam germline WES, cGAS-KO vs WT-F, chr19, own exome_bed | somatic_variants, facets (50/150/50), manta_tumor_normal | Lancet (off) |
+| mouse WGS, GRCm38 | `mouse_wgs_grcm38_chr19` | Project_17709, EMT6-B2-4mos-F8 vs EMT6-Parental-4mos, chr19, 27% of reads (about 38x) | somatic_variants (Strelka2), facets (700/750/700), manta, manta_tumor_normal, svaba (v1), gridss, wgs_metrics | Lancet (off) |
+| human WES, human PANEL | - | - | none on this master; the example configs in `_docs/examples/` are generated by setup_project.py | all targets |
+
+    Errors found by these tests and corrected on master: wgs_metrics.R used
+    a dplyr function that the pinned R environment lacks; two FACETS jobs
+    could write the same dbSNP VCF at once; mouse WES ignored `exome_bed`;
+    the mouse chunking BED named the mitochondrion `M`; split_bed.py failed
+    when a BED had fewer lines than chunks; GRIDSS could not write its index
+    next to the read-only mouse FASTA.
+
+    To set up the same test for a new case: subset each BAM to one
+    chromosome (`samtools view -b <bam> <chr>`, optionally `-s` to lower the
+    depth), write the project with `--bam-dir`, restrict the BEDs to that
+    chromosome (`targets_file` or `exome_bed`, and `call_intervals_bed`),
+    then run the targets of SETUP_NOTES.md.
+
+## 11. Manta exome mode in older runs
+
+    Before `seq_type` existed, Manta ran with `--exome` whenever
+    `targets_file` was set. Lab WGS projects set the whole-genome BED as
+    `targets_file` (it sets the chromosomes and the calling chunks), so their
+    Manta runs used exome mode. In exome mode Manta does not apply its
+    high-depth filters (Manta user guide). New projects with `seq_type: WGS`
+    run Manta without `--exome`, so their SV calls are not directly
+    comparable with these older calls.
+
+    Scan of 2026-11-26 (read only): `isExome` in every
+    `manta/*/runWorkflow.py.config.pickle` under `/data1/riazn/projects`
+    (iris), `/data/riazlab/projects` (lilac) and
+    `/data/reis-filho/data/parejaf/WGS_CDH1SV`. Folders that exist on both
+    clusters are listed once.
+
+| WGS project | Manta runs (pairs) | Latest run | targets_file |
+|---|---|---|---|
+| iris 30gy/pipeline_calls/broad_batch3 | 6 | 2019-09 | whole_genome_1indexed_nochr_scalpel.bed |
+| iris 30gy/pipeline_calls/virus_calls/frozen_msk_hpv16_sample | 5 | 2019-12 | same |
+| iris 30gy_version2/pipeline_calls/wgs_batch_1 | 17 | 2021-10 | same |
+| iris 30gy_version2/pipeline_calls/wgs_batch_2_66samples | 32 | 2022-04 | same |
+| iris and lilac powells/15-032/new_pipeline | 4 | 2022-09 | same |
+| iris powells/Powell_Project_16916_VIP/jrflab_pipeline | 1 | 2025-03 | same |
+| iris and lilac powells/Project_17165_ISceI-vector (and previous_module_runs) | 2 | 2025-06 | same |
+| iris and lilac powells/Project_17686_B; lilac Project_17686_C | 1; 3 | 2026-01 | whole_genome_0indexed_wchr.bed |
+| peix/ISceI_integrated_analysis_Philip/run_pipelines: run_short-reads_w_GFP_vector, run_tumor_normal_Iscel_experiment, run_wgs_Iscel_experiment_tumor_normal | 3, 1, 3 | 2026-02 | main_chr_ISceI.bed, whole_genome_0indexed_wchr.bed, whole_genome_0indexed_nochr.bed |
+| reis-filho parejaf/WGS_CDH1SV | 7 | 2026-05 | whole_genome_1indexed_nochr_scalpel.bed |
+| lilac yazakis/15_032_Shu/pipeline_batch1, batch2, batch3 | 15, 14, 5 | 2026-08 | same |
+| lilac khana7/Project_18183/pipeline_runs | 5 | 2026-07 | same |
+| iris peix/_collaborations/Agnel/pipeline_runs (mouse WGS) | 9 | 2022-06 | whole-genome BED of the mouse FASTA |
+
+    WGS runs without exome mode: 30gy branch_1 (igo_FFPE_SV_calls,
+    igo_realigned_calls, rahul_call) and broad_batch1 and broad_batch2.
+    These were run first with `--exome` and re-run without it in 2019; the
+    first runs are kept in `_manta_exome_flag`, `_mantaTN_exome_tag` and
+    `_manta_previous_exome_tag` folders. peix/hpv_wgs (no targets_file)
+    and the lilac test folders of section 10 also ran without it. The mouse
+    WES project sam_mouse_germline ran in exome mode, which is correct for
+    WES. No Manta folder was found for mouse_cell_lines or Project_17709
+    (search depth 7).
+
+    To reproduce an older run exactly, set `manta_exome: true`.
 
 # Input
     Command-line options (section 2), FASTQ or BAM folders or a sample sheet

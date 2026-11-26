@@ -15,7 +15,7 @@ Guide: `modules/_docs/new_project_setup.md`
 | samples | 0 (0 tumors, 0 normals) |
 | patients | 0 (0 with a normal) |
 | SV callers | manta |
-| indel callers | varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels |
+| indel callers | varscan_indels strelka_indels scalpel_indels platypus_indels |
 
 ## 1. Check or decide before the first run
 

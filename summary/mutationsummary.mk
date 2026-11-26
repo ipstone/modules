@@ -29,7 +29,11 @@ TABLES += $(SNV_TABLES) $(INDEL_TABLES)
 
 # Add optional absolute results to excel
 # the $(wildcard x) syntax is used to check for existence of file
-MUTATION_SUMMARY_OPTS = $(if $(findstring false,$(EXOME)),--include_all) $(if $(HOTSPOT_TABLE), --hotspot $(HOTSPOT_TABLE)) $(if $(SUMMARY_CONFIG), --summary_config $(SUMMARY_CONFIG))
+# --include_all keeps the LOW and MODIFIER calls. It is on for every seq_type (2026-11-26):
+# lab WES projects predate seq_type, so EXOME was false and their summaries kept these calls.
+# Set mutation_summary_include_all: false in project_config.yaml to drop them.
+MUTATION_SUMMARY_INCLUDE_ALL ?= true
+MUTATION_SUMMARY_OPTS = $(if $(findstring true,$(MUTATION_SUMMARY_INCLUDE_ALL)),--include_all) $(if $(HOTSPOT_TABLE), --hotspot $(HOTSPOT_TABLE)) $(if $(SUMMARY_CONFIG), --summary_config $(SUMMARY_CONFIG))
 ABSOLUTE_SOMATIC_TXTS ?= $(wildcard $(foreach set,$(SAMPLE_PAIRS),absolute/tables/$(set).somatic.txt))
 ABSOLUTE_SEGMENTS ?= $(wildcard $(foreach set,$(SAMPLE_PAIRS),absolute/reviewed/SEG_MAF/$(set)_ABS_MAF.txt))
 ifneq ($(and $(ABSOLUTE_SOMATIC_TXTS),$(ABSOLUTE_SEGMENTS)),)

@@ -78,7 +78,7 @@ mutect_use_contest: false
 # indel callers; a call is kept when >= 2 callers find it.
 # choices: varscan_indels strelka_indels scalpel_indels lancet_indels
 #          platypus_indels pindel mutect_indels
-indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
+indel_types: varscan_indels strelka_indels scalpel_indels platypus_indels
 # 1 = Strelka 1 (default) | 2 = Strelka2 from STRELKA_ENV
 strelka_version: 2
 

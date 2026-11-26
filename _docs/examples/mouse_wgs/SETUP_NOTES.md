@@ -15,7 +15,7 @@ Guide: `modules/_docs/new_project_setup.md`
 | samples | 0 (0 tumors, 0 normals) |
 | patients | 0 (0 with a normal) |
 | SV callers | manta, svaba |
-| indel callers | varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels |
+| indel callers | varscan_indels strelka_indels scalpel_indels platypus_indels |
 
 ## 1. Check or decide before the first run
 
@@ -28,10 +28,10 @@ Guide: `modules/_docs/new_project_setup.md`
 - [ ] Mouse: `ann_pathogen: false` (pathogenicity annotation is human-only).
 - [ ] Mouse: `cluster_samples` needs `dbsnp_subset` (a BED of common SNP sites); none exists on lilac yet.
 - [ ] Mouse: `delmh_summary` needs BSgenome.Mmusculus.UCSC.mm10, which is not installed in jrflab-modules-0.1.4.
-- [ ] Mouse: GRIDSS runs without the human blacklist and PON.
+- [ ] Mouse: GRIDSS uses the mm10 blacklist and the riazlab FASTA copy (GRIDSS_REF_FASTA), without a PON.
 - [ ] Mouse WGS: `bam_no_realn: true` and `bam_no_recal: true` skip GATK realignment and BQSR, and `strelka_version: 2` runs Strelka2, as in the mouse WGS example of mouse_and_seq_type_config.md. Set the two bam keys to false to realign and recalibrate with the MGP v5 known sites.
 - [ ] Reference GRCm38: Mouse GRCm38 / mm10, Ensembl 71 FASTA, contigs 1..19 X Y MT (no chr prefix).
-- [ ] Reference GRCm38: The WGS chunking BED (svaba region BED) names the mitochondrion 'M', the FASTA names it 'MT': chunks on 'M' find no reads.
+- [ ] Reference GRCm38: The WGS chunking BED is the svaba region BED with the mitochondrion renamed from 'M' to 'MT' (the FASTA name); the original file, which uses 'M', is unchanged next to it.
 - [ ] svaba 1.1.0 from SVABA_ENV (`--svaba-version 2` switches to 2.0.0).
 - [ ] Annotation: `ann_pathogen: false`, `vcf_post_ann_filter_expression: ExAC_AF > 0.01`.
 
