@@ -1,8 +1,11 @@
 # vim: set ft=make:
 ifndef GRCM38_INC
 # Mouse GRCm38 (mm10), Ensembl release 71 FASTA. Contig names have no "chr"
-# prefix (1..19, X, Y, MT); the MGP dbSNP VCFs, the svaba region BED and the
-# FACETS gene BED below use the same names. Paths checked on lilac 2026-11-24.
+# prefix (1..19, X, Y, MT); the MGP dbSNP VCFs and the FACETS gene BED below
+# use the same names. The original svaba region BED
+# (mouse_mm10_removed_blacklist-regon_no-chr.bed) names the mitochondrion "M";
+# the .MT.bed copy used here renames it to "MT" (2026-11-25). The centromere
+# table is chr-prefixed. Paths checked on lilac 2026-11-24.
 REF = GRCm38
 SPECIES = mouse
 TOPHAT_REF = GRCm38
@@ -38,7 +41,7 @@ FACETS_GENE_ANNOT ?= /data/riazlab/reference/mm10_genes/output_mm10_known_gene.b
 # SVABA_DBSNP: MGP v5 indels (uncompressed VCF, as svaba -D needs)
 SVABA_DBSNP ?= /data/riazlab/lib/reference/dbsnp/mouse/mgp.v5.merged.indels.dbSNP142.normed.vcf
 # region-INCLUSION BED for -k (genome minus blacklisted/gap regions), no chr
-SVABA_BLACKLIST ?= /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed
+SVABA_BLACKLIST ?= /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed
 SVABA_REGION ?= $(SVABA_BLACKLIST)
 
 # contamination/clusterSamples.mk needs a BED of common SNP sites.

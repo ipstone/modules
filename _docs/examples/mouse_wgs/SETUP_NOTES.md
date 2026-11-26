@@ -20,7 +20,7 @@ Guide: `modules/_docs/new_project_setup.md`
 ## 1. Check or decide before the first run
 
 - [ ] Write `samples.yaml` (and `sample.fastq.yaml` for FASTQ input): run setup_project.py again with --sample-sheet, --fastq-dir or --bam-dir and --force, or write them by hand.
-- [ ] WGS chunking: `targets_file` = `(not set)` and `call_intervals_bed` = `/data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed`. Lab human WGS projects set the whole-genome BED as targets_file; mouse WGS sets call_intervals_bed only.
+- [ ] WGS chunking: `targets_file` = `(not set)` and `call_intervals_bed` = `/data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed`. Lab human WGS projects set the whole-genome BED as targets_file; mouse WGS sets call_intervals_bed only.
 - [ ] FACETS critical values 700/750/700 (pre_cval/cval1/cval2), min_nhet 25. These are the lab WGS values. Earlier WGS projects used other values: WGS_CDH1SV 2050/2150/2050, I-SceI WGS 650/750/650. Decide before the first `make facets`.
 - [ ] Resource profile `config/profiles/wgs.inc` (sized for 30-100x). For higher depth raise single values in project_config.yaml (for example `lancet_resources`).
 - [ ] Run `make wgs_metrics` after alignment (coverage check before calling).

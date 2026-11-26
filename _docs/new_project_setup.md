@@ -179,7 +179,7 @@ PT02-N  N     PT02     /path/bams/PT02-N.bam
 | `targets_file` | whole_genome_1indexed_nochr_scalpel.bed | (from EXOME_BED) | panel BED | (genome include) | not set |
 | `exome_bed` | - | kit BED if not the default | - | - | - |
 | `targets_list` | - | kit list (preset) | panel list (preset) | - | - |
-| `call_intervals_bed` | (targets_file) | (targets_file) | (targets_file) | (targets_file) | mouse_mm10_removed_blacklist-regon_no-chr.bed |
+| `call_intervals_bed` | (targets_file) | (targets_file) | (targets_file) | (targets_file) | mouse_mm10_removed_blacklist-region_no-chr.MT.bed |
 | `ontarget_file` / `offtarget_file` | - | - | CNVkit BEDs (preset) | - | - |
 | `facets_pre_cval / cval1 / cval2` | 700 / 750 / 700 | 50 / 150 / 50 | 50 / 150 / 50 | 50 / 150 / 50 | 700 / 750 / 700 |
 | `facets_min_nhet` | 25 | 25 | 25 | 25 | 25 |

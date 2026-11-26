@@ -66,7 +66,7 @@ GRCm38:
   contig_style: nochr
   default_exome_bed: ~/share/reference/mus_musculus_known_genes_exons_GRCm38_noheader.bed
   wgs_targets_file: null
-  wgs_call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed
+  wgs_call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed
   ann_pathogen: false
   notes:
     - "Mouse GRCm38 / mm10, Ensembl 71 FASTA, contigs 1..19 X Y MT (no chr prefix)."

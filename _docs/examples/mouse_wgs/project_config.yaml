@@ -63,7 +63,7 @@ merge_split_bams: false
 # targets_list: ~/share/lib/bed_files/targets/<panel>/b37/<panel>_b37_targets.list
 # BED used to split the genome into chunks for mutect, mutect2, scalpel and
 # lancet. Default: targets_file. Set it when the chunking BED differs.
-call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed
+call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed
 
 # ---------------------------------------------------------------- CNVkit (panels)
 # target and antitarget BEDs for `make cnv_kit`

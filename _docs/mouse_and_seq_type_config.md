@@ -120,7 +120,7 @@ bam_dup_type: markdup   # duplicate marking stays on
 bam_no_realn: true      # optional: skip indel realignment
 bam_no_recal: true      # optional: skip BQSR
 # whole genome minus gaps/blacklist, no chr prefix; used only for chunking
-call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-regon_no-chr.bed
+call_intervals_bed: /data/riazlab/lib/reference/svaba/mouse_mm10_removed_blacklist-region_no-chr.MT.bed
 snv_type: mutect
 indel_types: varscan_indels strelka_indels scalpel_indels lancet_indels platypus_indels
 strelka_version: 2      # Strelka2, as the mouse WGS projects used
