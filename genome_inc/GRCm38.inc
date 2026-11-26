@@ -18,6 +18,12 @@ GENES_GTF = $(REF_DIR)/Mus_musculus/NCBI/$(TOPHAT_REF)/Annotation/Genes/genes.gt
 
 REF_FASTA ?= $(REF_DIR)/Mus_musculus_GRCm38/Mus_musculus.GRCm38.71.dna.chromosome.genome.fa
 REF_DICT ?= $(REF_DIR)/Mus_musculus_GRCm38/Mus_musculus.GRCm38.71.dna.chromosome.genome.dict
+# GRIDSS setupreference writes index files beside the FASTA, and REF_DIR
+# (reis-filho) is read-only for riazlab users. Use the riazlab copy of the
+# same FASTA (with BWA index), as b37.inc does.
+GRIDSS_REF_FASTA ?= /data/riazlab/lib/reference/Mus_musculus_GRCm38/Mus_musculus.GRCm38.71.dna.chromosome.genome.fa
+# ENCODE mm10 blacklist without the chr prefix
+GRIDSS_BLACKLIST ?= /data/riazlab/lib/reference/blacklist/GRCm38.blacklist.bed
 SNP_EFF_GENOME = GRCm38.86 # == mm10
 DBSNP ?= $(REF_DIR)/mgp.v5.merged.snps_all.dbSNP142.vcf.gz
 MGP_SNP_DBSNP := $(DBSNP)
