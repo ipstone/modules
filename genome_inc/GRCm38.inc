@@ -58,6 +58,12 @@ DELMH_BSGENOME ?= BSgenome.Mmusculus.UCSC.mm10
 # no mouse hotspot VCFs: hotspot genotyping and hotspot summary tables are off
 NO_HOTSPOTS ?= true
 
+# WES uses EXOME_BED_NOHEADER as TARGETS_FILE. When a project sets only
+# exome_bed (its capture-kit BED, as for b37/hg19), use that BED for both;
+# without this the default exon BED was used without any message.
+ifdef EXOME_BED
+EXOME_BED_NOHEADER ?= $(EXOME_BED)
+endif
 EXOME_BED ?= $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38.bed
 EXOME_BED_NOHEADER ?= $(REF_DIR)/mus_musculus_known_genes_exons_GRCm38_noheader.bed
 
