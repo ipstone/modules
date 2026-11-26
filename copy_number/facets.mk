@@ -63,7 +63,7 @@ facets/vcf/dbsnp_het_gatk.snps.vcf : $(FACETS_DBSNP) $(foreach sample,$(SAMPLES)
 	$(call RUN,-c $(FACETS_HET_RESOURCES),"$(call GATK_MEM,8G) -V $< -T VariantFiltration -R $(REF_FASTA) --genotypeFilterName 'hom' --genotypeFilterExpression 'isHet == 0' -o $@")
 
 facets/vcf/targets_dbsnp.vcf : $(TARGETS_FILE)
-	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@.tmp && mv $@.tmp $@
+	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@.tmp.$$$$ && mv $@.tmp.$$$$ $@
 
 ifeq ($(CONVERT_BASECOUNT),true)
 CONVERT_BC_TO_SNP_PILEUP = python modules/copy_number/convert_basecount_to_snp_pileup.py

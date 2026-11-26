@@ -16,7 +16,7 @@ facets_suite : facets_suite/targets_dbsnp.vcf \
 	       facets_suite/summary.txt
 
 facets_suite/targets_dbsnp.vcf : $(TARGETS_FILE)
-	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@.tmp && mv $@.tmp $@
+	$(INIT) $(BEDTOOLS) intersect -header -u -a $(DBSNP) -b $< > $@.tmp.$$$$ && mv $@.tmp.$$$$ $@
 	
 
 define snp-pileup
